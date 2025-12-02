@@ -1,0 +1,27 @@
+{
+  "$schema": "https://www.krakend.io/schema/krakend.json",
+  "version": 3,
+  "name": "KrakenD - API Gateway",
+  "timeout": "3000ms",
+  "cache_ttl": "300s",
+  "output_encoding": "json",
+  "port": 8080,
+  "endpoints":[
+    {
+      "endpoint": "/auth-ui/{tail:.*}",
+      "backend": [
+        {
+          "host": ["http://keycloak:8080"],
+          "url_pattern": "/{tail}",
+          "encoding": "no-op",
+          "disable_host_sanitize": true
+        }
+      ],
+      "extra_config": {
+        "proxy": {
+          "forwarded_headers": ["X-Forwarded-For", "X-Forwarded-Host", "X-Forwarded-Proto", "X-Forwarded-Port"]
+        }
+      }
+    }
+  ]
+}

@@ -46,19 +46,33 @@ services:
       KC_HOSTNAME: localhost
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_FEATURES: account  # ← КЛЮЧЕВОЕ ИЗМЕНЕНИЕ
     volumes:
       - ./architecture/keycloak/realm-config.json:/opt/keycloak/data/import/realm-config.json
     depends_on:
       keycloak_postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL","curl -fsS http://localhost:9000/healthy/ready || exit1"]
+      test: [ "CMD-SHELL","curl -fsS http://localhost:9000/healthy/ready || exit 1" ]  # ← исправил опечатку: exit1 → exit 1
       interval: 10s
       timeout: 5s
       retries: 50
     networks:
       - keycloak_net
 
+  #krakenD
+
+  krakend:
+    container_name: krakend_gate
+    image: devopsfaith/krakend:2.1.2
+    ports:
+      - "8081:8080"
+    expose:
+      - 8081
+    volumes:
+      - ./architecture/krakend/krakend.json:/etc/krakend.json
+    networks:
+      - keycloak_net
   #микросервис1
   #микросервис2
   #микросервис3
@@ -80,3 +94,4 @@ networks:
     driver: bridge
   microservices:
     driver: bridge
+  api_gateaway:
