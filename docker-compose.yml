@@ -1,24 +1,5 @@
 services:
   #бд для хранения юзеров
-  postgres-for-users:
-    image: postgres:16
-    container_name: postgres_for_users
-    restart: always
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 1234
-      POSTGRES_DB: auth
-    ports:
-      - "5434:5432"
-    volumes:
-      - postgres_users_data:/var/lib/postgresql/data
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - microservices
   #бд для кеширования
   redis:
     image: redis
@@ -65,8 +46,9 @@ services:
       - keycloak_net
 
 
+
+
 volumes:
-  postgres_users_data:
   postgres_keycloak_data:
   redis_data:
 
