@@ -63,16 +63,17 @@ services:
   #krakenD
 
   krakend:
-    container_name: krakend_gate
     image: devopsfaith/krakend:2.1.2
     ports:
-      - "8081:8080"
+      - 8081:8080
     expose:
       - 8081
     volumes:
-      - ./architecture/krakend/krakend.json:/etc/krakend.json
+      - ./architecture/krakend:/etc/krakend
     networks:
       - keycloak_net
+
+
   #микросервис1
   #микросервис2
   #микросервис3

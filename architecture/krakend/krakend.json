@@ -1,27 +1,51 @@
 {
-  "$schema": "https://www.krakend.io/schema/krakend.json",
+  "$schema": "https://www.krakend.io/schema/v3.json",
   "version": 3,
   "name": "KrakenD - API Gateway",
   "timeout": "3000ms",
   "cache_ttl": "300s",
   "output_encoding": "json",
   "port": 8080,
+  "host": ["http://localhost:8081"],
+  "extra_config": {
+    "security/cors": {
+      "allow_origins": [
+        "*"
+      ],
+      "allow_methods": [
+        "GET",
+        "HEAD",
+        "POST"
+      ],
+      "expose_headers": [
+        "Content-Length",
+        "Content-Type",
+        "Authorization"
+      ],
+      "allow_headers": [
+        "Accept-Language",
+        "Authorization"
+      ],
+      "max_age": "12h",
+      "allow_credentials": true,
+      "debug": true
+    }
+  },
   "endpoints":[
     {
-      "endpoint": "/auth-ui/{tail:.*}",
+      "endpoint": "/keycloak-protected",
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://keycloak:8080/realms/master/protocol/openid-connect/certs",
+          "disable_jwk_security": true
+        }
+      },
       "backend": [
         {
-          "host": ["http://keycloak:8080"],
-          "url_pattern": "/{tail}",
-          "encoding": "no-op",
-          "disable_host_sanitize": true
+          "host":["http://localhost:8080"],
+          "url_pattern": "/__health"
         }
-      ],
-      "extra_config": {
-        "proxy": {
-          "forwarded_headers": ["X-Forwarded-For", "X-Forwarded-Host", "X-Forwarded-Proto", "X-Forwarded-Port"]
-        }
-      }
-    }
-  ]
+      ]
+    }]
 }
