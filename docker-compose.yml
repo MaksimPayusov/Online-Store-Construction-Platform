@@ -73,26 +73,90 @@ services:
     networks:
       - keycloak_net
 
+  #бд для категорий товаров
+  goods_categories:
+    image: postgres:15
+    container_name: goods-categories
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_goods-categories_data:/var/lib/postgresql/data
+    networks:
+      - microservices
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 20
 
-  #микросервис1
-  #микросервис2
-  #микросервис3
-  #микросервис4
-  #микросервис5
-  #микросервис6
-  #микросервис7
-  #микросервис8
+  #микросервис для категорий товаров
+  goodscategories:
+    build:
+      context: ./goodscategory
+      dockerfile: Dockerfile
+    container_name: goodscategory
+    ports:
+      - "8005:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - DB_HOST=postgres
+    depends_on:
+      goods_categories:
+        condition: service_healthy
+    networks:
+      - microservices
 
+  #бд для корзины
+  basket_db:
+    image: postgres:15
+    container_name: basket-db
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_basket_data:/var/lib/postgresql/data
+    networks:
+      - microservices
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 20
 
-
+  #микросервис корзины
+  basket:
+    build:
+      context: ./basket
+      dockerfile: Dockerfile
+    container_name: basket
+    ports:
+      - "8006:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+    depends_on:
+      basket_db:
+        condition: service_healthy
+    networks:
+      - microservices
 volumes:
   postgres_keycloak_data:
+  postgres_goods-categories_data:
   redis_data:
+  postgres_basket_data:
 
 networks:
   #нетворк для кейклоака
   keycloak_net:
     driver: bridge
+  #нетворк для микросервисов
   microservices:
     driver: bridge
   api_gateaway:
+    driver: bridge
