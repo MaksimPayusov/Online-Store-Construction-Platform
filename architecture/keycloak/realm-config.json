@@ -50,6 +50,38 @@
   "roles": {
     "realm": [
       {
+        "id": "54898397-f321-4810-a656-f44cdea30b28",
+        "name": "admin",
+        "description": "for admins",
+        "composite": true,
+        "composites": {
+          "realm": [
+            "default-roles-main_one",
+            "offline_access",
+            "uma_authorization"
+          ]
+        },
+        "clientRole": false,
+        "containerId": "5b022cc1-9390-4d6b-be74-a7a1469d54bc",
+        "attributes": {}
+      },
+      {
+        "id": "20b2b6d1-7862-4817-8e57-23757b48b84c",
+        "name": "contentcreator",
+        "description": "for contentcreators",
+        "composite": true,
+        "composites": {
+          "realm": [
+            "default-roles-main_one",
+            "offline_access",
+            "uma_authorization"
+          ]
+        },
+        "clientRole": false,
+        "containerId": "5b022cc1-9390-4d6b-be74-a7a1469d54bc",
+        "attributes": {}
+      },
+      {
         "id": "75b3e141-8b96-46bd-b893-795a4b08f3fa",
         "name": "offline_access",
         "description": "${role_offline-access}",
@@ -83,6 +115,22 @@
               "view-profile"
             ]
           }
+        },
+        "clientRole": false,
+        "containerId": "5b022cc1-9390-4d6b-be74-a7a1469d54bc",
+        "attributes": {}
+      },
+      {
+        "id": "62f20a09-dc33-489d-a27a-33eeab7f29e5",
+        "name": "user",
+        "description": "for users",
+        "composite": true,
+        "composites": {
+          "realm": [
+            "default-roles-main_one",
+            "offline_access",
+            "uma_authorization"
+          ]
         },
         "clientRole": false,
         "containerId": "5b022cc1-9390-4d6b-be74-a7a1469d54bc",
@@ -588,12 +636,12 @@
         "oidc.ciba.grant.enabled": "false",
         "client.use.lightweight.access.token.enabled": "false",
         "backchannel.logout.session.required": "true",
-        "request.object.required": "not required",
         "client_credentials.use_refresh_token": "false",
+        "request.object.required": "not required",
         "access.token.header.type.rfc9068": "false",
-        "tls.client.certificate.bound.access.tokens": "false",
-        "require.pushed.authorization.requests": "false",
         "acr.loa.map": "{}",
+        "require.pushed.authorization.requests": "false",
+        "tls.client.certificate.bound.access.tokens": "false",
         "display.on.consent.screen": "false",
         "request.object.encryption.enc": "any",
         "pkce.code.challenge.method": "S256",
@@ -714,12 +762,12 @@
         "oidc.ciba.grant.enabled": "false",
         "client.use.lightweight.access.token.enabled": "false",
         "backchannel.logout.session.required": "true",
-        "request.object.required": "not required",
         "client_credentials.use_refresh_token": "false",
+        "request.object.required": "not required",
         "access.token.header.type.rfc9068": "false",
-        "tls.client.certificate.bound.access.tokens": "false",
-        "require.pushed.authorization.requests": "false",
         "acr.loa.map": "{}",
+        "require.pushed.authorization.requests": "false",
+        "tls.client.certificate.bound.access.tokens": "false",
         "display.on.consent.screen": "false",
         "request.object.encryption.enc": "any",
         "pkce.code.challenge.method": "S256",
@@ -1518,6 +1566,30 @@
       ]
     },
     {
+      "id": "09fc71ca-57ff-4357-98da-8ea9ae3a8fb4",
+      "name": "web-origins",
+      "description": "OpenID Connect scope for add allowed web origins to the access token",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "false",
+        "consent.screen.text": "",
+        "display.on.consent.screen": "false"
+      },
+      "protocolMappers": [
+        {
+          "id": "257533ad-8e50-4ec1-8405-93124f6b99e9",
+          "name": "allowed web origins",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-allowed-origins-mapper",
+          "consentRequired": false,
+          "config": {
+            "access.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
       "id": "242b9b2f-88ac-4d82-b635-f6232683607c",
       "name": "email",
       "description": "OpenID Connect built-in scope: email",
@@ -1558,30 +1630,6 @@
             "access.token.claim": "true",
             "claim.name": "email",
             "jsonType.label": "String"
-          }
-        }
-      ]
-    },
-    {
-      "id": "09fc71ca-57ff-4357-98da-8ea9ae3a8fb4",
-      "name": "web-origins",
-      "description": "OpenID Connect scope for add allowed web origins to the access token",
-      "protocol": "openid-connect",
-      "attributes": {
-        "include.in.token.scope": "false",
-        "consent.screen.text": "",
-        "display.on.consent.screen": "false"
-      },
-      "protocolMappers": [
-        {
-          "id": "257533ad-8e50-4ec1-8405-93124f6b99e9",
-          "name": "allowed web origins",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-allowed-origins-mapper",
-          "consentRequired": false,
-          "config": {
-            "access.token.claim": "true",
-            "introspection.token.claim": "true"
           }
         }
       ]
@@ -1652,14 +1700,14 @@
         "subComponents": {},
         "config": {
           "allowed-protocol-mapper-types": [
-            "saml-user-attribute-mapper",
-            "saml-user-property-mapper",
-            "oidc-full-name-mapper",
-            "oidc-usermodel-property-mapper",
-            "oidc-sha256-pairwise-sub-mapper",
             "saml-role-list-mapper",
+            "oidc-full-name-mapper",
+            "oidc-usermodel-attribute-mapper",
+            "saml-user-property-mapper",
+            "oidc-usermodel-property-mapper",
             "oidc-address-mapper",
-            "oidc-usermodel-attribute-mapper"
+            "oidc-sha256-pairwise-sub-mapper",
+            "saml-user-attribute-mapper"
           ]
         }
       },
@@ -1671,13 +1719,13 @@
         "subComponents": {},
         "config": {
           "allowed-protocol-mapper-types": [
+            "saml-user-property-mapper",
             "oidc-usermodel-attribute-mapper",
             "oidc-usermodel-property-mapper",
             "oidc-full-name-mapper",
-            "saml-user-property-mapper",
-            "saml-user-attribute-mapper",
             "oidc-address-mapper",
             "oidc-sha256-pairwise-sub-mapper",
+            "saml-user-attribute-mapper",
             "saml-role-list-mapper"
           ]
         }

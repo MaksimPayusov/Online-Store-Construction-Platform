@@ -64,14 +64,16 @@ services:
 
   krakend:
     image: devopsfaith/krakend:2.1.2
+    container_name: krakend
     ports:
-      - 8081:8080
+      - "8081:8080"
     expose:
       - 8081
     volumes:
       - ./architecture/krakend:/etc/krakend
     networks:
       - keycloak_net
+      - microservices
 
   #бд для категорий товаров
   goods_categories:
@@ -94,7 +96,7 @@ services:
       retries: 20
 
   #микросервис для категорий товаров
-  goodscategories:
+  goodscategory:
     build:
       context: ./goodscategory
       dockerfile: Dockerfile

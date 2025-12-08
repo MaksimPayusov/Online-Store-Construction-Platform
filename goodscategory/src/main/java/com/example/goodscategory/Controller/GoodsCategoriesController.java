@@ -28,7 +28,7 @@ public class GoodsCategoriesController {
         catch (Exception e){
             throw new IllegalArgumentException("Такого родителя не существует");
         }
-        return ResponseEntity.ok("Категория успешно создана!");
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/get/{id}")
