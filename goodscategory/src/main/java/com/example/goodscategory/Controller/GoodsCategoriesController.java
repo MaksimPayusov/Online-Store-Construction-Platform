@@ -22,7 +22,9 @@ public class GoodsCategoriesController {
 
     private final GoodsCategoriesService goodsCategoriesService;
 
-    @PostMapping(value = "/create", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    //@PostMapping(value = "/create", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+
+    @PostMapping("/create")
     public ResponseEntity<Map<String, Object>> create(@RequestBody GoodsCategoriesCreateRequest dtoRequest) {
         log.info("Received create request: title={}, description={}, parentCategoryTitle={}", 
                 dtoRequest.getTitle(), dtoRequest.getDescription(), dtoRequest.getParentCategoryTitle());

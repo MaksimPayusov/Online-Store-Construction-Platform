@@ -1,16 +1,14 @@
 {
   "$schema": "https://www.krakend.io/schema/v3.json",
   "version": 3,
-  "name": "KrakenD - API Gateway",
   "timeout": "5000ms",
+  "name": "KrakenD - API Gateway",
   "output_encoding": "json",
   "port": 8080,
   "endpoints": [
     {
-      "endpoint": "/v1/svc1/hello",
+      "endpoint": "/good-categories/create",
       "method": "POST",
-      "output_encoding": "json",
-      "input_headers": ["*"],
       "extra_config": {
         "auth/validator": {
           "alg": "RS256",
@@ -26,6 +24,20 @@
             "http://goodscategory:8080"
           ],
           "encoding": "json"
+        }
+      ]
+    },
+    {
+      "endpoint": "/basket/add",
+      "method": "POST",
+      "backend": [
+        {
+        "url_pattern": "/api/v1/me/basket-items/create",
+        "method": "POST",
+        "host": [
+          "http://basket:8080"
+        ],
+        "encoding": "json"
         }
       ]
     }
