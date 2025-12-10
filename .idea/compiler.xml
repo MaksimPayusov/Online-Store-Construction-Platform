@@ -7,7 +7,7 @@
         <processorPath useClasspath="false">
           <entry name="$PROJECT_DIR$/../.gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/1.18.42/8365263844ebb62398e0dc33057ba10ba472d3b8/lombok-1.18.42.jar" />
         </processorPath>
-        <module name="basket.main" />
+        <module name="fileservice.main" />
       </profile>
     </annotationProcessing>
   </component>
@@ -16,6 +16,9 @@
       <module name="basket" options="-parameters" />
       <module name="basket.main" options="-parameters" />
       <module name="basket.test" options="-parameters" />
+      <module name="fileservice" options="-parameters" />
+      <module name="fileservice.main" options="-parameters" />
+      <module name="fileservice.test" options="-parameters" />
       <module name="goodscategory" options="-parameters" />
       <module name="goodscategory.main" options="-parameters" />
       <module name="goodscategory.test" options="-parameters" />

@@ -147,11 +147,44 @@ services:
         condition: service_healthy
     networks:
       - microservices
+
+
+  minio:
+    image: minio/minio
+    container_name: minio
+    environment:
+      - MINIO_ROOT_USER=abcd
+      - MINIO_ROOT_PASSWORD=abcd2345
+      - MINIO_DEFAULT_BUCKETS=buck1
+    command: server /data --console-address ":9001"
+    networks:
+      - microservices
+
+    volumes:
+      - minio_data:/data
+    ports:
+      - "9000:9000" # API
+      - "9001:9001" # Console
+    restart: always
+
+  fileservice:
+    build:
+      context: ./fileservice
+      dockerfile: Dockerfile
+    container_name: fileservice
+    ports:
+      - "8007:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+    networks:
+      - microservices
+
 volumes:
   postgres_keycloak_data:
   postgres_goods-categories_data:
   redis_data:
   postgres_basket_data:
+  minio_data:
 
 networks:
   #нетворк для кейклоака
@@ -162,3 +195,4 @@ networks:
     driver: bridge
   api_gateaway:
     driver: bridge
+
