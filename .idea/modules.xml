@@ -2,9 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/goodscategory.main.iml" filepath="$PROJECT_DIR$/.idea/modules/goodscategory.main.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/seniory-pomidory.iml" filepath="$PROJECT_DIR$/.idea/seniory-pomidory.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../GoodsCategoriesMicroservice/src/test/test.iml" filepath="$PROJECT_DIR$/../GoodsCategoriesMicroservice/src/test/test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/fileservice.main.iml" filepath="$PROJECT_DIR$/.idea/modules/fileservice.main.iml" />
     </modules>
   </component>
 </project>

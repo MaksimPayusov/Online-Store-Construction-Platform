@@ -148,18 +148,19 @@ services:
     networks:
       - microservices
 
-
+  #микросервис чтобы хранить файлы
   minio:
     image: minio/minio
     container_name: minio
     environment:
-      - MINIO_ROOT_USER=abcd
-      - MINIO_ROOT_PASSWORD=abcd2345
-      - MINIO_DEFAULT_BUCKETS=buck1
+      - MINIO_ROOT_USER=admin
+      - MINIO_ROOT_PASSWORD=admin1234
+      - MINIO_DEFAULT_BUCKETS=fashionconstuct
     command: server /data --console-address ":9001"
     networks:
-      - microservices
-
+      microservices:
+        aliases:
+          - minio-storage
     volumes:
       - minio_data:/data
     ports:
@@ -167,6 +168,7 @@ services:
       - "9001:9001" # Console
     restart: always
 
+  #микросервис для обмена файлами
   fileservice:
     build:
       context: ./fileservice
