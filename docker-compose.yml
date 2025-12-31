@@ -10,6 +10,7 @@ services:
       - redis_data:/data
     networks:
       - microservices
+
   #бд для кейклоака
   keycloak_postgres:
     image: postgres:15
@@ -29,6 +30,19 @@ services:
       interval: 10s
       timeout: 5s
       retries: 20
+
+  #экспортер для бд кейклоака
+  keycloak-postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: keycloak-postgres-exporter
+    depends_on:
+      person-postgres:
+        condition: service_healthy
+    environment:
+      DATA_SOURCE_NAME: postgresql://keycloak:keycloak@keycloak-postgres:5432/keycloak?sslmode=disable
+    ports:
+      - "9189:9187"
+
   #для кейклоака и экспорта конфига
   keycloak:
     image: quay.io/keycloak/keycloak:26.2
@@ -61,7 +75,6 @@ services:
       - keycloak_net
 
   #krakenD
-
   krakend:
     image: devopsfaith/krakend:2.1.2
     container_name: krakend
@@ -76,7 +89,7 @@ services:
       - microservices
 
   #бд для категорий товаров
-  goods_categories:
+  goods-categories:
     image: postgres:15
     container_name: goods-categories
     environment:
@@ -94,6 +107,18 @@ services:
       interval: 10s
       timeout: 5s
       retries: 20
+
+  #экспортер для бд категорий товаров
+  goods-categories-postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: goods-categories-postgres-exporter
+    depends_on:
+      person-postgres:
+        condition: service_healthy
+    environment:
+      DATA_SOURCE_NAME: postgresql://keycloak:keycloak@keycloak-postgres:5432/keycloak?sslmode=disable
+    ports:
+      - "9189:9188"
 
   #микросервис для категорий товаров
   goodscategory:
@@ -113,7 +138,7 @@ services:
       - microservices
 
   #бд для корзины
-  basket_db:
+  basket-db:
     image: postgres:15
     container_name: basket-db
     environment:
@@ -131,6 +156,18 @@ services:
       interval: 10s
       timeout: 5s
       retries: 20
+
+  #экспортер для бд корзины
+  basket-db-postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: basket-db-postgres-exporter
+    depends_on:
+      person-postgres:
+        condition: service_healthy
+    environment:
+      DATA_SOURCE_NAME: postgresql://keycloak:keycloak@keycloak-postgres:5432/keycloak?sslmode=disable
+    ports:
+      - "9189:9189"
 
   #микросервис корзины
   basket:
@@ -168,6 +205,7 @@ services:
       - "9001:9001" # Console
     restart: always
 
+  
   #микросервис для обмена файлами
   fileservice:
     build:
