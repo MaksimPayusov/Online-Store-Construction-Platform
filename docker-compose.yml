@@ -36,12 +36,14 @@ services:
     image: prometheuscommunity/postgres-exporter:latest
     container_name: keycloak-postgres-exporter
     depends_on:
-      person-postgres:
+      keycloak_postgres:
         condition: service_healthy
     environment:
       DATA_SOURCE_NAME: postgresql://keycloak:keycloak@keycloak-postgres:5432/keycloak?sslmode=disable
     ports:
-      - "9189:9187"
+      - "9187:9187"
+    networks:
+      - microservices
 
   #для кейклоака и экспорта конфига
   keycloak:
@@ -113,12 +115,14 @@ services:
     image: prometheuscommunity/postgres-exporter:latest
     container_name: goods-categories-postgres-exporter
     depends_on:
-      person-postgres:
+      goods-categories:
         condition: service_healthy
     environment:
-      DATA_SOURCE_NAME: postgresql://keycloak:keycloak@keycloak-postgres:5432/keycloak?sslmode=disable
+      DATA_SOURCE_NAME: postgresql://postgres:postgres@goods-categories:5432/postgres?sslmode=disable
     ports:
-      - "9189:9188"
+      - "9188:9187"
+    networks:
+      - microservices
 
   #микросервис для категорий товаров
   goodscategory:
@@ -132,7 +136,7 @@ services:
       - SPRING_PROFILES_ACTIVE=prod
       - DB_HOST=postgres
     depends_on:
-      goods_categories:
+      goods-categories:
         condition: service_healthy
     networks:
       - microservices
@@ -162,12 +166,14 @@ services:
     image: prometheuscommunity/postgres-exporter:latest
     container_name: basket-db-postgres-exporter
     depends_on:
-      person-postgres:
+      basket-db:
         condition: service_healthy
     environment:
-      DATA_SOURCE_NAME: postgresql://keycloak:keycloak@keycloak-postgres:5432/keycloak?sslmode=disable
+      DATA_SOURCE_NAME: postgresql://postgres:postgres@basket-db:5432/postgres?sslmode=disable
     ports:
-      - "9189:9189"
+      - "9189:9187"
+    networks:
+      - microservices
 
   #микросервис корзины
   basket:
@@ -180,7 +186,7 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=prod
     depends_on:
-      basket_db:
+      basket-db:
         condition: service_healthy
     networks:
       - microservices
@@ -218,9 +224,8 @@ services:
       - SPRING_PROFILES_ACTIVE=prod
     networks:
       - microservices
-    
 
-  #prometheus поменять конфиг
+  #prometheus
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
@@ -317,8 +322,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
-  networks:
-    - microservices
+    networks:
+      - microservices
 
 
 
