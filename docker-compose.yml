@@ -46,14 +46,14 @@ services:
       KC_HOSTNAME: localhost
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
-      KC_FEATURES: account  # ← КЛЮЧЕВОЕ ИЗМЕНЕНИЕ
+      KC_FEATURES: account  
     volumes:
       - ./architecture/keycloak/realm-config.json:/opt/keycloak/data/import/realm-config.json
     depends_on:
       keycloak_postgres:
         condition: service_healthy
     healthcheck:
-      test: [ "CMD-SHELL","curl -fsS http://localhost:9000/healthy/ready || exit 1" ]  # ← исправил опечатку: exit1 → exit 1
+      test: [ "CMD-SHELL","curl -fsS http://localhost:9000/healthy/ready || exit 1" ]  
       interval: 10s
       timeout: 5s
       retries: 50
@@ -180,13 +180,122 @@ services:
       - SPRING_PROFILES_ACTIVE=prod
     networks:
       - microservices
+    
 
+  #prometheus поменять конфиг
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./architecture/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "http://localhost:9090/-/healthy" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+    - microservices
+
+  #loki
+  loki:
+    image: grafana/loki:2.9.2
+    container_name: loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./architecture/loki/loki-config.yaml:/etc/loki/loki-config.yaml:ro
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:3100/ready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+    - microservices
+
+  #tempo
+  tempo:
+    image: grafana/tempo:2.4.1
+    container_name: tempo
+    command: [ "-config.file=/etc/tempo/tempo.yaml" ]
+    volumes:
+      - ./architecture/tempo/tempo.yaml:/etc/tempo/tempo.yaml
+      - tempo_data:/var/tempo
+    ports:
+      - "3200:3200"
+    networks:
+    - microservices
+
+  #alloy change
+  alloy:
+    image: grafana/alloy:latest
+    container_name: alloy
+    user: root
+    ports:
+      - "9080:9080" # HTTP interface
+      - "4317:4317" # OTLP gRPC
+      - "4318:4318" # OTLP http
+    volumes:
+      - ./architecture/alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/log:/var/log:ro
+    environment:
+      GRAFANA_LOKI_URL: http://loki:3100/loki/api/v1/push
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:9080
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    networks:
+    - microservices
+
+  #grafana
+  grafana:
+    image: grafana/grafana:10.3.1
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      prometheus:
+        condition: service_healthy
+      loki:
+        condition: service_healthy
+      tempo:
+        condition: service_started
+      alloy:
+        condition: service_started
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: true
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_METRICS_ENABLED: "true"
+    volumes:
+      - ./architecture/grafana/provisioning:/etc/grafana/provisioning
+      - ./architecture/grafana/dashboards:/var/lib/grafana/dashboards
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "http://localhost:3000/api/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+  networks:
+    - microservices
+
+
+
+#волум
 volumes:
   postgres_keycloak_data:
   postgres_goods-categories_data:
   redis_data:
   postgres_basket_data:
   minio_data:
+  loki_data:
+  loki_chunks:
+  loki_index:
+  loki_rules:
+  tempo_data:
 
 networks:
   #нетворк для кейклоака
@@ -197,4 +306,7 @@ networks:
     driver: bridge
   api_gateaway:
     driver: bridge
+
+
+
 

@@ -24,4 +24,9 @@ public class Shop {
 
     @Column(nullable = false)
     private String designCode;
+
+    @Column(nullable = false)
+    private Long owner_id;
+    
+
 }
