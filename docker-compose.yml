@@ -1,8 +1,8 @@
 services:
-  #бд для кеширования
   redis:
     image: redis
     container_name: redis
+    profiles: [db]
     restart: always
     ports:
       - "6379:6379"
@@ -11,10 +11,10 @@ services:
     networks:
       - microservices
 
-  #бд для кейклоака
   keycloak_postgres:
     image: postgres:15
     container_name: keycloak-postgres
+    profiles: [db]
     environment:
       POSTGRES_DB: keycloak
       POSTGRES_USER: keycloak
@@ -26,74 +26,15 @@ services:
     networks:
       - keycloak_net
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U keycloak" ]
+      test: ["CMD-SHELL", "pg_isready -U keycloak"]
       interval: 10s
       timeout: 5s
       retries: 20
 
-  #экспортер для бд кейклоака
-  keycloak-postgres-exporter:
-    image: prometheuscommunity/postgres-exporter:latest
-    container_name: keycloak-postgres-exporter
-    depends_on:
-      keycloak_postgres:
-        condition: service_healthy
-    environment:
-      DATA_SOURCE_NAME: postgresql://keycloak:keycloak@keycloak-postgres:5432/keycloak?sslmode=disable
-    ports:
-      - "9187:9187"
-    networks:
-      - microservices
-
-  #для кейклоака и экспорта конфига
-  keycloak:
-    image: quay.io/keycloak/keycloak:26.2
-    container_name: keycloak
-    command: start-dev --import-realm --metrics-enabled=true
-    ports:
-      - "8080:8080"
-    environment:
-      JAVA_OPTS: -Dkeycloak.migration.usersExportStrategy=REALM_FILE
-      KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://keycloak-postgres:5432/keycloak
-      KC_DB_URL_DATABASE: keycloak
-      KC_DB_USERNAME: keycloak
-      KC_DB_PASSWORD: keycloak
-      KC_HOSTNAME: localhost
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
-      KC_FEATURES: account  
-    volumes:
-      - ./architecture/keycloak/realm-config.json:/opt/keycloak/data/import/realm-config.json
-    depends_on:
-      keycloak_postgres:
-        condition: service_healthy
-    healthcheck:
-      test: [ "CMD-SHELL","curl -fsS http://localhost:9000/healthy/ready || exit 1" ]  
-      interval: 10s
-      timeout: 5s
-      retries: 50
-    networks:
-      - keycloak_net
-
-  #krakenD
-  krakend:
-    image: devopsfaith/krakend:2.1.2
-    container_name: krakend
-    ports:
-      - "8081:8080"
-    expose:
-      - 8081
-    volumes:
-      - ./architecture/krakend:/etc/krakend
-    networks:
-      - keycloak_net
-      - microservices
-
-  #бд для категорий товаров
   goods-categories:
     image: postgres:15
     container_name: goods-categories
+    profiles: [db]
     environment:
       POSTGRES_DB: postgres
       POSTGRES_USER: postgres
@@ -105,46 +46,12 @@ services:
     networks:
       - microservices
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
-      interval: 10s
-      timeout: 5s
-      retries: 20
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
 
-  #экспортер для бд категорий товаров
-  goods-categories-postgres-exporter:
-    image: prometheuscommunity/postgres-exporter:latest
-    container_name: goods-categories-postgres-exporter
-    depends_on:
-      goods-categories:
-        condition: service_healthy
-    environment:
-      DATA_SOURCE_NAME: postgresql://postgres:postgres@goods-categories:5432/postgres?sslmode=disable
-    ports:
-      - "9188:9187"
-    networks:
-      - microservices
-
-  #микросервис для категорий товаров
-  goodscategory:
-    build:
-      context: ./goodscategory
-      dockerfile: Dockerfile
-    container_name: goodscategory
-    ports:
-      - "8005:8080"
-    environment:
-      - SPRING_PROFILES_ACTIVE=prod
-      - DB_HOST=postgres
-    depends_on:
-      goods-categories:
-        condition: service_healthy
-    networks:
-      - microservices
-
-  #бд для корзины
   basket-db:
     image: postgres:15
     container_name: basket-db
+    profiles: [db]
     environment:
       POSTGRES_DB: postgres
       POSTGRES_USER: postgres
@@ -156,135 +63,171 @@ services:
     networks:
       - microservices
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
-      interval: 10s
-      timeout: 5s
-      retries: 20
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
 
-  #экспортер для бд корзины
-  basket-db-postgres-exporter:
-    image: prometheuscommunity/postgres-exporter:latest
-    container_name: basket-db-postgres-exporter
-    depends_on:
-      basket-db:
-        condition: service_healthy
-    environment:
-      DATA_SOURCE_NAME: postgresql://postgres:postgres@basket-db:5432/postgres?sslmode=disable
-    ports:
-      - "9189:9187"
-    networks:
-      - microservices
-
-  #микросервис корзины
-  basket:
-    build:
-      context: ./basket
-      dockerfile: Dockerfile
-    container_name: basket
-    ports:
-      - "8006:8080"
-    environment:
-      - SPRING_PROFILES_ACTIVE=prod
-    depends_on:
-      basket-db:
-        condition: service_healthy
-    networks:
-      - microservices
-
-  #микросервис чтобы хранить файлы
   minio:
     image: minio/minio
     container_name: minio
-    profiles:
-      - obs
+    profiles: [db]
     environment:
-      - MINIO_ROOT_USER=admin
-      - MINIO_ROOT_PASSWORD=admin1234
-      - MINIO_DEFAULT_BUCKETS=fashionconstuct
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: admin1234
+      MINIO_DEFAULT_BUCKETS: fashionconstuct
     command: server /data --console-address ":9001"
-    networks:
-      microservices:
-        aliases:
-          - minio-storage
     volumes:
       - minio_data:/data
     ports:
-      - "9000:9000" # API
-      - "9001:9001" # Console
-    restart: always
-
-  
-  #микросервис для обмена файлами
-  fileservice:
-    build:
-      context: ./fileservice
-      dockerfile: Dockerfile
-    container_name: fileservice
-    ports:
-      - "8007:8080"
-    environment:
-      - SPRING_PROFILES_ACTIVE=prod
+      - "9000:9000"
+      - "9001:9001"
     networks:
       - microservices
 
-  #prometheus
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.2
+    container_name: keycloak
+    profiles: [core]
+    command: start-dev --import-realm --metrics-enabled=true
+    ports:
+      - "8080:8080"
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    volumes:
+      - ./architecture/keycloak/realm-config.json:/opt/keycloak/data/import/realm-config.json
+    depends_on:
+      keycloak_postgres:
+        condition: service_healthy
+    networks:
+      - keycloak_net
+
+  krakend:
+    image: devopsfaith/krakend:2.1.2
+    container_name: krakend
+    profiles: [core]
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./architecture/krakend:/etc/krakend
+    networks:
+      - keycloak_net
+      - microservices
+
+  goodscategory:
+    build: ./goodscategory
+    container_name: goodscategory
+    profiles: [core]
+    ports:
+      - "8005:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+    depends_on:
+      goods-categories:
+        condition: service_healthy
+    networks:
+      - microservices
+
+  basket:
+    build: ./basket
+    container_name: basket
+    profiles: [core]
+    ports:
+      - "8006:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+    depends_on:
+      basket-db:
+        condition: service_healthy
+    networks:
+      - microservices
+
+  fileservice:
+    build: ./fileservice
+    container_name: fileservice
+    profiles: [core]
+    ports:
+      - "8007:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+    networks:
+      - microservices
+
+  #rabbitmq
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    restart: always
+    profiles: [core]
+    command: >
+      sh -c "rabbitmq-plugins enable rabbitmq_prometheus && rabbitmq-server"
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+      - "15692:15692"
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=admin
+      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbit disk_free_limit 214748648
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - microservices
+      - observability
+
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus
     container_name: prometheus
-    profiles:
-      - obs
+    profiles: [obs]
     ports:
       - "9090:9090"
     volumes:
       - ./architecture/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - observability
     healthcheck:
       test: [ "CMD", "wget", "--spider", "http://localhost:9090/-/healthy" ]
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-    - microservices
 
-  #loki
   loki:
     image: grafana/loki:2.9.2
     container_name: loki
-    profiles:
-      - obs
+    profiles: [obs]
     ports:
       - "3100:3100"
     volumes:
-      - ./architecture/loki/loki-config.yaml:/etc/loki/loki-config.yaml:ro
+      - ./architecture/loki/loki-config.yaml:/etc/loki/loki-config.yaml
     healthcheck:
       test: [ "CMD", "wget", "--spider", "-q", "http://localhost:3100/ready" ]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-    - microservices
+      - observability
+    
 
-  #tempo
   tempo:
     image: grafana/tempo:2.4.1
     container_name: tempo
-    profiles:
-      - obs
-    command: [ "-config.file=/etc/tempo/tempo.yaml" ]
-    volumes:
-      - ./architecture/tempo/tempo.yaml:/etc/tempo/tempo.yaml
-      - tempo_data:/var/tempo
+    profiles: [obs]
     ports:
       - "3200:3200"
+    volumes:
+      - ./architecture/tempo/tempo.yaml:/etc/tempo/tempo.yaml
+    command:
+    - -config.file=/etc/tempo/tempo.yaml
     networks:
-    - microservices
+      - observability
 
-  #alloy change
   alloy:
     image: grafana/alloy:latest
     container_name: alloy
-    profiles:
-      - obs
     user: root
+    profiles: [obs]
     ports:
       - "9080:9080" # HTTP interface
       - "4317:4317" # OTLP gRPC
@@ -302,16 +245,14 @@ services:
       - --storage.path=/var/lib/alloy/data
       - /etc/alloy/config.alloy
     networks:
-    - microservices
+      - observability
 
-  #grafana
   grafana:
     image: grafana/grafana:10.3.1
     container_name: grafana
-    profiles:
-      - obs
     ports:
       - "3000:3000"
+    profiles: [obs]
     depends_on:
       prometheus:
         condition: service_healthy
@@ -335,24 +276,7 @@ services:
       timeout: 5s
       retries: 10
     networks:
-      - microservices
-
-  #rabbitmq
-  rabbitmq:
-    image: rabbitmq:3-management
-    container_name: rabbitmq
-    restart: always
-    ports:
-      - "15672:15672"
-      - "5672:5672"
-    environment:
-      - RABBITMQ_DEFAULT_USER=admin
-      - RABBITMQ_DEFAULT_PASS=admin
-      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbit disk_free_limit 214748648
-
-    volumes:
-      - ./rabbitmq:/var/lib/rabbitmq
-
+      - observability
 
 #волум
 volumes:
@@ -365,8 +289,8 @@ volumes:
   loki_chunks:
   loki_index:
   loki_rules:
+  rabbitmq_data:
   tempo_data:
-
 networks:
   #нетворк для кейклоака
   keycloak_net:
@@ -375,6 +299,9 @@ networks:
   microservices:
     driver: bridge
   api_gateaway:
+    driver: bridge
+  #нетворск для обесрвабилити
+  observability:
     driver: bridge
 
 
