@@ -2,11 +2,18 @@
 
 
 
-1) конфиг шопа бд+докерфайл
-2) рэбит
-3) 
-4) связать фронт с беком
-
+1)
+настройка инфраструктуры, то есть docker compose + rabbitMq + Keycloak + Minio
+2)
+Shared library (config rabbitMq) + observability
+3)
+microservices
+4)
+gateaway
+5)
+event model rabbitMq payment shit
+6)
+kubernetes
 
 
 
