@@ -2,7 +2,6 @@ services:
   redis:
     image: redis
     container_name: redis
-    profiles: [db]
     restart: always
     ports:
       - "6379:6379"
@@ -11,68 +10,12 @@ services:
     networks:
       - microservices
 
-  keycloak_postgres:
-    image: postgres:15
-    container_name: keycloak-postgres
-    profiles: [db]
-    environment:
-      POSTGRES_DB: keycloak
-      POSTGRES_USER: keycloak
-      POSTGRES_PASSWORD: keycloak
-    ports:
-      - "5433:5432"
-    volumes:
-      - postgres_keycloak_data:/var/lib/postgresql/data
-    networks:
-      - keycloak_net
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U keycloak"]
-      interval: 10s
-      timeout: 5s
-      retries: 20
-
-  goods-categories:
-    image: postgres:15
-    container_name: goods-categories
-    profiles: [db]
-    environment:
-      POSTGRES_DB: postgres
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5434:5432"
-    volumes:
-      - postgres_goods-categories_data:/var/lib/postgresql/data
-    networks:
-      - microservices
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-
-  basket-db:
-    image: postgres:15
-    container_name: basket-db
-    profiles: [db]
-    environment:
-      POSTGRES_DB: postgres
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5435:5432"
-    volumes:
-      - postgres_basket_data:/var/lib/postgresql/data
-    networks:
-      - microservices
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-
   minio:
     image: minio/minio
     container_name: minio
-    profiles: [db]
     environment:
       MINIO_ROOT_USER: admin
       MINIO_ROOT_PASSWORD: admin1234
-      MINIO_DEFAULT_BUCKETS: fashionconstuct
     command: server /data --console-address ":9001"
     volumes:
       - minio_data:/data
@@ -80,34 +23,34 @@ services:
       - "9000:9000"
       - "9001:9001"
     networks:
-      - microservices
+      files:
+        aliases:
+          - minio-storage
 
   keycloak:
     image: quay.io/keycloak/keycloak:26.2
     container_name: keycloak
-    profiles: [core]
     command: start-dev --import-realm --metrics-enabled=true
     ports:
       - "8080:8080"
     environment:
       KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://keycloak-postgres:5432/keycloak
+      KC_DB_URL: jdbc:postgresql://db:5432/keycloak_postgres
       KC_DB_USERNAME: keycloak
       KC_DB_PASSWORD: keycloak
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
     volumes:
       - ./architecture/keycloak/realm-config.json:/opt/keycloak/data/import/realm-config.json
-    depends_on:
-      keycloak_postgres:
-        condition: service_healthy
     networks:
       - keycloak_net
-
+    depends_on:
+      db:
+        condition: service_healthy
+        
   krakend:
     image: devopsfaith/krakend:2.1.2
     container_name: krakend
-    profiles: [core]
     ports:
       - "8081:8080"
     volumes:
@@ -119,13 +62,12 @@ services:
   goodscategory:
     build: ./goodscategory
     container_name: goodscategory
-    profiles: [core]
     ports:
       - "8005:8080"
     environment:
       SPRING_PROFILES_ACTIVE: prod
     depends_on:
-      goods-categories:
+      db:
         condition: service_healthy
     networks:
       - microservices
@@ -133,13 +75,12 @@ services:
   basket:
     build: ./basket
     container_name: basket
-    profiles: [core]
     ports:
       - "8006:8080"
     environment:
       SPRING_PROFILES_ACTIVE: prod
     depends_on:
-      basket-db:
+      db:
         condition: service_healthy
     networks:
       - microservices
@@ -147,20 +88,21 @@ services:
   fileservice:
     build: ./fileservice
     container_name: fileservice
-    profiles: [core]
     ports:
       - "8007:8080"
     environment:
       SPRING_PROFILES_ACTIVE: prod
+    depends_on:
+      - minio
     networks:
       - microservices
+      - files
 
   #rabbitmq
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
     restart: always
-    profiles: [core]
     command: >
       sh -c "rabbitmq-plugins enable rabbitmq_prometheus && rabbitmq-server"
     ports:
@@ -180,7 +122,6 @@ services:
   prometheus:
     image: prom/prometheus
     container_name: prometheus
-    profiles: [obs]
     ports:
       - "9090:9090"
     volumes:
@@ -196,7 +137,6 @@ services:
   loki:
     image: grafana/loki:2.9.2
     container_name: loki
-    profiles: [obs]
     ports:
       - "3100:3100"
     volumes:
@@ -213,7 +153,6 @@ services:
   tempo:
     image: grafana/tempo:2.4.1
     container_name: tempo
-    profiles: [obs]
     ports:
       - "3200:3200"
     volumes:
@@ -227,7 +166,6 @@ services:
     image: grafana/alloy:latest
     container_name: alloy
     user: root
-    profiles: [obs]
     ports:
       - "9080:9080" # HTTP interface
       - "4317:4317" # OTLP gRPC
@@ -252,7 +190,6 @@ services:
     container_name: grafana
     ports:
       - "3000:3000"
-    profiles: [obs]
     depends_on:
       prometheus:
         condition: service_healthy
@@ -277,6 +214,26 @@ services:
       retries: 10
     networks:
       - observability
+
+  db:
+    image: postgres:15-alpine
+    container_name: db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_MULTIPLE_DATABASES: auth_db,basket_db,shop_db,keycloak_postgres,goodscategory_db
+    volumes:
+      - ./init-multiple-databases.sh:/docker-entrypoint-initdb.d/init-multiple-databases.sh
+    ports:
+      - "5432:5432"
+    networks:
+      - microservices
+      - keycloak_net
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -p 5432" ]
+      interval: 10s
+      timeout: 5s
+      retries: 20
 
 #волум
 volumes:
@@ -303,7 +260,8 @@ networks:
   #нетворск для обесрвабилити
   observability:
     driver: bridge
-
+  files:
+    driver: bridge
 
 
 

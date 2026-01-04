@@ -3,7 +3,7 @@
 
 
 1)
-настройка инфраструктуры, то есть docker compose + rabbitMq + Keycloak + Minio
+настройка инфраструктуры, то есть docker compose + rabbitMq + Keycloak + Minio + перехуярить бдшки
 2)
 Shared library (config rabbitMq) + observability
 3)

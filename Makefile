@@ -1,21 +1,21 @@
 DOCKER_COMPOSE = docker compose
-INFRA_SEVICES?= keycloak prometheus grafana tempo loki
+INFRA_SEVICES?= keycloak prometheus grafana tempo loki alloy goodscategory basket krakend
 
 .PHONY: all up build start stop clean logs rebuild obs down downvolumes
 
 obs:
-	$(DOCKER_COMPOSE) --profile obs up -d
+	$(DOCKER_COMPOSE) up prometheus grafana tempo loki alloy -d
 
-db:
-	$(DOCKER_COMPOSE) --profile db up -d
+core:
+	$(DOCKER_COMPOSE) up goodscategory basket keycloak krakend fileservice basket-db goodscategory-db keycloak-postgres minio rabbitmq -d
 
 obsdb:obs db
 
 all:
-	$(DOCKER_COMPOSE) up -dß
+	$(DOCKER_COMPOSE) up -d
 
-rebuild:
-	$(DOCKER_COMPOSE) up -d --rebuild
+build:
+	$(DOCKER_COMPOSE) up -d --build
 
 stop:
 	$(DOCKER_COMPOSE) stop
