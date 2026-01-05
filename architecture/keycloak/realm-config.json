@@ -135,6 +135,22 @@
         "clientRole": false,
         "containerId": "5b022cc1-9390-4d6b-be74-a7a1469d54bc",
         "attributes": {}
+      },
+      {
+        "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "name": "owner",
+        "description": "for shop owners",
+        "composite": true,
+        "composites": {
+          "realm": [
+            "default-roles-main_one",
+            "offline_access",
+            "uma_authorization"
+          ]
+        },
+        "clientRole": false,
+        "containerId": "5b022cc1-9390-4d6b-be74-a7a1469d54bc",
+        "attributes": {}
       }
     ],
     "client": {

@@ -64,6 +64,10 @@ services:
     networks:
       - keycloak_net
       - microservices
+    environment:
+      - FC_ENABLE=1
+      - FC_PARTIALS=/etc/krakend
+      - FC_TEMPLATES=/etc/krakend
 
   goodscategory:
     build: ./goodscategory
