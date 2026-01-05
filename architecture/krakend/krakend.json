@@ -31,6 +31,26 @@
       ]
     },
     {
+      "endpoint": "/auth/login",
+      "method": "POST",
+      "backend": [
+        {
+          "url_pattern": "/realms/main_one/protocol/openid-connect/token",
+          "host": ["http://keycloak:8080"], 
+          "encoding": "no-op" 
+        }
+      ],
+      "extra_config": {
+         "modifier/martian": {
+          "header.Modifier": {
+            "scope": ["request", "response"],
+            "name": "Content-Type",
+            "value": "application/x-www-form-urlencoded"
+          }
+        }
+      }
+    },
+    {
       "endpoint": "/basket/add",
       "method": "POST",
       "backend": [
@@ -59,8 +79,7 @@
           "url_pattern": "/__health"
         }
     ]
-  }
-  ]
+  }]
 }
 
 
