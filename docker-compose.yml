@@ -36,13 +36,16 @@ services:
       - "9000:9000"
     environment:
       KC_DB: postgres
-      KC_HOSTNAME_URL: http://localhost:8080
-      KC_PROXY: edge
       KC_DB_URL: jdbc:postgresql://db:5432/keycloak_postgres
       KC_DB_USERNAME: postgres
       KC_DB_PASSWORD: postgres
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_PROXY: edge
+      KC_PROXY_HEADERS: xforwarded
+      KC_HTTP_ENABLED: "true"
+      KC_HTTPS_ENABLED: "false"
+      KC_HOSTNAME_STRICT: "false"
     volumes:
       - ./architecture/keycloak/realm-config.json:/opt/keycloak/data/import/realm-config.json
     networks:
@@ -100,6 +103,7 @@ services:
     networks:
       - microservices
       - files
+    
     
   userservice:
     build: ./userservice

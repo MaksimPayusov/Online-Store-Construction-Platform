@@ -21,6 +21,6 @@ public class authcontroller {
     @PostMapping("/register")
     public ResponseEntity<?> authforkeycloak(@RequestBody UserRegistrationDto dto){
         userservice.createUser(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        return ResponseEntity.ok().build();
     }
 }

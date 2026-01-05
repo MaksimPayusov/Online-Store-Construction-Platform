@@ -9,6 +9,7 @@ import org.keycloak.admin.client.CreatedResponseUtil;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -20,7 +21,8 @@ public class Userservice {
 
     private final Keycloak keycloak;
     private final usersrepository usersrepository;
-
+    
+    @Async
     public void createUser(UserRegistrationDto dto) {
         UserRepresentation user = new UserRepresentation();
         user.setEnabled(true);
