@@ -55,7 +55,7 @@ services:
         condition: service_healthy
         
   krakend:
-    image: devopsfaith/krakend:2.1.2
+    image: devopsfaith/krakend:2.9
     container_name: krakend
     ports:
       - "8081:8080"
