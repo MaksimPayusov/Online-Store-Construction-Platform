@@ -33,23 +33,6 @@ Body:
 GET /auth/user/{userId}/roles
 ```
 
-## Роль в заголовках
 
-Фильтр `RoleHeaderFilter` автоматически извлекает роль из JWT токена (из заголовка `Authorization: Bearer <token>`) и добавляет её в заголовок ответа:
-- `X-User-Role: admin|owner|user`
 
-Роль определяется по приоритету: admin > owner > user (если у пользователя несколько ролей, выбирается наивысшая).
-
-## Структура JWT токена
-
-Keycloak помещает роли в токен в следующем формате:
-```json
-{
-  "realm_access": {
-    "roles": ["user", "admin", ...]
-  }
-}
-```
-
-Фильтр извлекает роль из `realm_access.roles` и добавляет её в заголовок.
 

@@ -127,6 +127,30 @@
           "url_pattern": "/__health"
         }
       ]
+    },
+    {
+      "endpoint": "/api/proxy",
+      "method": "GET",
+      "input_headers": ["Authorization", "X-User-Id", "X-User-Role"],
+      "backend": [
+        {
+          "method": "GET",
+          "url_pattern": "/auth/path",
+          "host": ["http://userservice:8080"]
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://keycloak:8080/realms/main_one/protocol/openid-connect/certs",
+          "disable_jwk_security": true,
+          "cache": true,
+          "cache_duration": 900,
+          "propagate_claims": [
+            ["sub", "X-User-Id"]
+          ]
+        }
+      }
     }
   ]
 }

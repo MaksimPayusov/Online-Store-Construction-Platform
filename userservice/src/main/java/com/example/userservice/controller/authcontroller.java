@@ -8,6 +8,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 @RestController
 @RequestMapping("/auth")
@@ -51,4 +54,10 @@ public class authcontroller {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
+    @GetMapping("path")
+    public ResponseEntity<?> getMethodName(@RequestHeader(value = "X-User-Id", required = false) String currentUserId,
+                                @RequestHeader(value = "X-User-Role", required = false) String currentUserRole) {
+        return ResponseEntity.ok("Hello ur id is "+currentUserId +"\n and ur Role is "+ currentUserRole);
+    }
+    
 }
