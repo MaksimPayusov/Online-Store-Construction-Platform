@@ -3,6 +3,8 @@ package com.example.shop.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.UUID;
+
 
 @Entity
 @Data
@@ -26,7 +28,7 @@ public class Shop {
     private String designCode;
 
     @Column(nullable = false)
-    private Long owner_id;
+    private UUID owner_id;
     
 
 }

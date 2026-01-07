@@ -24,7 +24,11 @@ public class authcontroller {
         userservice.createUser(dto);
         return ResponseEntity.ok().build();
     }
-    
+    @PostMapping("/registerowner")
+    public ResponseEntity<?> authforkeycloakowner(@RequestBody UserRegistrationDto dto){
+        userservice.createUser(dto);
+        return ResponseEntity.ok().build();
+    }
     @PostMapping("/assign-role")
     public ResponseEntity<?> assignRole(
             @RequestHeader(value = "X-User-Id", required = false) String currentUserId,

@@ -38,8 +38,8 @@
       "backend": [
         {
           "url_pattern": "/realms/main_one/protocol/openid-connect/token",
-          "host": ["http://keycloak:8080"], 
-          "encoding": "no-op" 
+          "host": ["http://keycloak:8080"],
+          "encoding": "json"
         }
       ],
       "extra_config": {
@@ -148,7 +148,36 @@
           "cache_duration": 900,
           "roles_key": "realm_access.roles",
           "roles_key_is_nested": true,
-          "roles": ["admin"],
+          "roles": ["owner"],
+          "propagate_claims": [
+            ["sub", "X-User-Id"]
+          ],
+          "operation_debug": true
+        }
+      }
+    },
+
+    {
+      "endpoint": "/shop/create",
+      "method": "POST",
+      "input_headers": ["Authorization", "X-User-Id"],
+      "backend": [
+        {
+          "method": "POST",
+          "url_pattern": "/shop/create",
+          "host": ["http://shop:8080"]
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://keycloak:8080/realms/main_one/protocol/openid-connect/certs",
+          "disable_jwk_security": true,
+          "cache": true,
+          "cache_duration": 900,
+          "roles_key": "realm_access.roles",
+          "roles_key_is_nested": true,
+          "roles": ["owner"],
           "propagate_claims": [
             ["sub", "X-User-Id"]
           ],
@@ -156,7 +185,12 @@
         }
       }
     }
+
+
+
+
   ]
+
 }
 
 

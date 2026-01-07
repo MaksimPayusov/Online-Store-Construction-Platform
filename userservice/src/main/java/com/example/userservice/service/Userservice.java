@@ -45,7 +45,6 @@ public class Userservice {
         user.setCredentials(Collections.singletonList(credential));
         user.setEmailVerified(false);
         user.setRequiredActions(Collections.singletonList("VERIFY_EMAIL"));
-
         RealmResource realm = keycloak.realm(REALM_NAME);
         Response response = realm.users().create(user);
 

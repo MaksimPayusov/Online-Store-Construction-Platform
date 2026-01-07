@@ -8,4 +8,5 @@ public class GoodsCategoriesCreateRequest {
     private String title;
     private String description;
     private String parentCategoryTitle;
+    private String role;
 }

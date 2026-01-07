@@ -123,6 +123,19 @@ services:
       - microservices
       - keycloak_net
 
+  shop:
+    build: ./shop
+    container_name: shop
+    ports:
+      - "8009:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - microservices
+
   #rabbitmq
   rabbitmq:
     image: rabbitmq:3-management
