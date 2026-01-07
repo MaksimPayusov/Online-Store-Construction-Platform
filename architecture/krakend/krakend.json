@@ -158,13 +158,15 @@
     },
 
     {
-      "endpoint": "/shop/create",
+      "endpoint": "/shop/create1",
       "method": "POST",
-      "input_headers": ["Authorization", "X-User-Id"],
+      "encoding": "json",
+      "input_headers": ["Authorization", "X-User-Id", "Content-Type"],
       "backend": [
         {
-          "method": "POST",
           "url_pattern": "/shop/create",
+          "method": "POST",
+          "encoding": "json",
           "host": ["http://shop:8080"]
         }
       ],
@@ -185,6 +187,7 @@
         }
       }
     }
+
 
 
 
