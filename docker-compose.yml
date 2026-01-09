@@ -68,17 +68,96 @@ services:
       - FC_ENABLE=1
       - FC_PARTIALS=/etc/krakend
       - FC_TEMPLATES=/etc/krakend
+    depends_on:
+      - keycloak
 
-  goodscategory:
-    build: ./goodscategory
-    container_name: goodscategory
+  productservice:
+    build: ./productservice
+    container_name: productservice
     ports:
-      - "8005:8080"
+      - "8083:8083"
     environment:
-      SPRING_PROFILES_ACTIVE: prod
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: productdb
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: admin
+      RABBITMQ_PASSWORD: admin
+      SERVER_PORT: 8083
     depends_on:
       db:
         condition: service_healthy
+      rabbitmq:
+        condition: service_started
+    networks:
+      - microservices
+
+  cartservice:
+    build: ./cartservice
+    container_name: cartservice
+    ports:
+      - "8084:8084"
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: cartdb
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: admin
+      RABBITMQ_PASSWORD: admin
+      SERVER_PORT: 8084
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+    networks:
+      - microservices
+
+  newsservice:
+    build: ./newsservice
+    container_name: newsservice
+    ports:
+      - "8085:8085"
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: newsdb
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      SERVER_PORT: 8085
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - microservices
+
+  orderservice:
+    build: ./orderservice
+    container_name: orderservice
+    ports:
+      - "8087:8087"
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: orderdb
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: admin
+      RABBITMQ_PASSWORD: admin
+      SERVER_PORT: 8087
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
     networks:
       - microservices
 
@@ -86,9 +165,11 @@ services:
     build: ./basket
     container_name: basket
     ports:
-      - "8006:8080"
+      - "8086:8080"
     environment:
-      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/basket_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
     depends_on:
       db:
         condition: service_healthy
@@ -99,9 +180,16 @@ services:
     build: ./fileservice
     container_name: fileservice
     ports:
-      - "8007:8080"
+      - "8082:8082"
     environment:
-      SPRING_PROFILES_ACTIVE: prod
+      MINIO_ENDPOINT: minio-storage
+      MINIO_PORT: 9000
+      MINIO_ACCESS_KEY: admin
+      MINIO_SECRET_KEY: admin1234
+      MINIO_BUCKET_NAME: fashionconstruct
+      MINIO_PUBLIC_URL: http://localhost:9000
+      MINIO_SECURE: "false"
+      SERVER_PORT: 8082
     depends_on:
       - minio
     networks:
@@ -113,9 +201,11 @@ services:
     build: ./userservice
     container_name: userservice
     ports:
-      - "8008:8080"
+      - "8080:8080"
     environment:
-      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/userservice_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
     depends_on:
       db:
         condition: service_healthy
@@ -127,9 +217,14 @@ services:
     build: ./shop
     container_name: shop
     ports:
-      - "8009:8080"
+      - "8080:8080"
     environment:
-      SPRING_PROFILES_ACTIVE: prod
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: shop_db
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      SERVER_PORT: 8080
     depends_on:
       db:
         condition: service_healthy
@@ -259,7 +354,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_MULTIPLE_DATABASES: auth_db,basket_db,shop_db,keycloak_postgres,goodscategory_db,userservice_db
+      POSTGRES_MULTIPLE_DATABASES: basket_db,shop_db,keycloak_postgres,userservice_db,productdb,cartdb,newsdb,orderdb
     volumes:
       - ./init-multiple-databases.sh:/docker-entrypoint-initdb.d/init-multiple-databases.sh
       - postgres_data:/var/lib/postgresql_data

@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 public class MinioInitializer {
 
     private final MinioClient minioClient;
+    
     @Value("${minio.bucket-name}")
     private String bucketName;
 
@@ -25,13 +26,21 @@ public class MinioInitializer {
 
     public void setupBucketAndPolicy() {
         try {
-            boolean found = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
+            boolean found = minioClient.bucketExists(
+                BucketExistsArgs.builder()
+                    .bucket(bucketName)
+                    .build()
+            );
 
             if (!found) {
-                minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
-                System.out.println("Bucket '" + bucketName + "' created.");
+                minioClient.makeBucket(
+                    MakeBucketArgs.builder()
+                        .bucket(bucketName)
+                        .build()
+                );
+                System.out.println("[MinIO] Bucket '" + bucketName + "' created successfully");
             } else {
-                System.out.println("Bucket '" + bucketName + "' already exists.");
+                System.out.println("[MinIO] Bucket '" + bucketName + "' already exists");
             }
 
             String publicReadPolicy = String.format(
@@ -46,10 +55,12 @@ public class MinioInitializer {
                             .config(publicReadPolicy)
                             .build()
             );
-
+            
+            System.out.println("[MinIO] Public read policy applied to bucket '" + bucketName + "'");
 
         } catch (Exception e) {
-            throw new RuntimeException("MinIO setup failed.", e);
+            System.err.println("[MinIO] Setup failed: " + e.getMessage());
+            throw new RuntimeException("MinIO setup failed", e);
         }
     }
 }
