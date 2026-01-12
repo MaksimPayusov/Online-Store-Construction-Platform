@@ -62,8 +62,10 @@ public class KeycloakService {
                         ? dto.getRole() : DEFAULT_ROLE;
                 assignRoleToUser(userId, roleToAssign);
 
-                // Send verification email asynchronously
+                // Send verification email asynchronously with proper classloader context
+                ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
                 CompletableFuture.runAsync(() -> {
+                    Thread.currentThread().setContextClassLoader(contextClassLoader);
                     try {
                         UserResource userResource = realm.users().get(userId);
                         userResource.sendVerifyEmail();

@@ -190,13 +190,14 @@ services:
     networks:
       - microservices
       - files
+      - fashion-network
     
     
   userservice:
     build: ./userservice
     container_name: userservice
-    expose:
-      - "8080"
+    ports:
+      - "8088:8080"
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/userservice_db
       SPRING_DATASOURCE_USERNAME: postgres
@@ -228,6 +229,7 @@ services:
         condition: service_healthy
     networks:
       - microservices
+      - fashion-network
 
   # Frontend (Admin Panel)
   frontend:

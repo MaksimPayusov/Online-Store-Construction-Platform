@@ -124,6 +124,26 @@
       }
     },
     {
+      "endpoint": "/auth/refresh",
+      "method": "POST",
+      "backend": [
+        {
+          "url_pattern": "/realms/main_one/protocol/openid-connect/token",
+          "host": ["http://keycloak:8080"],
+          "encoding": "json"
+        }
+      ],
+      "extra_config": {
+         "modifier/martian": {
+          "header.Modifier": {
+            "scope": ["request", "response"],
+            "name": "Content-Type",
+            "value": "application/x-www-form-urlencoded"
+          }
+        }
+      }
+    },
+    {
       "endpoint": "/basket/add",
       "method": "POST",
       "input_headers": ["Authorization", "X-User-Id", "Content-Type"],
@@ -784,11 +804,41 @@
     {
       "endpoint": "/api/files/upload",
       "method": "POST",
-      "encoding": "no-op",
+      "output_encoding": "no-op",
       "input_headers": ["Authorization", "X-User-Id", "Content-Type"],
       "backend": [
         {
           "url_pattern": "/api/files/upload",
+          "method": "POST",
+          "encoding": "no-op",
+          "host": ["http://fileservice:8082"]
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://keycloak:8080/realms/main_one/protocol/openid-connect/certs",
+          "disable_jwk_security": true,
+          "cache": true,
+          "cache_duration": 900,
+          "roles_key": "realm_access.roles",
+          "roles_key_is_nested": true,
+          "roles": ["owner", "admin"],
+          "propagate_claims": [
+            ["sub", "X-User-Id"]
+          ],
+          "operation_debug": true
+        }
+      }
+    },
+    {
+      "endpoint": "/api/files/upload/{category}",
+      "method": "POST",
+      "output_encoding": "no-op",
+      "input_headers": ["Authorization", "X-User-Id", "Content-Type"],
+      "backend": [
+        {
+          "url_pattern": "/api/files/upload/{category}",
           "method": "POST",
           "encoding": "no-op",
           "host": ["http://fileservice:8082"]
