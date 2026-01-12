@@ -94,6 +94,7 @@ services:
         condition: service_started
     networks:
       - microservices
+      - fashion-network
 
   cartservice:
     build: ./cartservice
@@ -131,6 +132,7 @@ services:
         condition: service_healthy
     networks:
       - microservices
+      - fashion-network
 
   orderservice:
     build: ./orderservice

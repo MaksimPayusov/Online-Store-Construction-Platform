@@ -504,6 +504,19 @@
       ]
     },
     {
+      "endpoint": "/api/products/shop/{shopId}/active",
+      "method": "GET",
+      "encoding": "json",
+      "backend": [
+        {
+          "url_pattern": "/api/products/shop/{shopId}/active",
+          "method": "GET",
+          "encoding": "json",
+          "host": ["http://productservice:8083"]
+        }
+      ]
+    },
+    {
       "endpoint": "/api/products/{id}",
       "method": "PUT",
       "encoding": "json",
@@ -525,7 +538,7 @@
           "cache_duration": 900,
           "roles_key": "realm_access.roles",
           "roles_key_is_nested": true,
-          "roles": ["owner"],
+          "roles": ["owner", "admin"],
           "propagate_claims": [
             ["sub", "X-User-Id"]
           ],
@@ -555,7 +568,7 @@
           "cache_duration": 900,
           "roles_key": "realm_access.roles",
           "roles_key_is_nested": true,
-          "roles": ["owner"],
+          "roles": ["owner", "admin"],
           "propagate_claims": [
             ["sub", "X-User-Id"]
           ],
@@ -585,7 +598,7 @@
           "cache_duration": 900,
           "roles_key": "realm_access.roles",
           "roles_key_is_nested": true,
-          "roles": ["admin"],
+          "roles": ["admin","owner"],
           "propagate_claims": [
             ["sub", "X-User-Id"]
           ],
@@ -628,7 +641,7 @@
           "cache_duration": 900,
           "roles_key": "realm_access.roles",
           "roles_key_is_nested": true,
-          "roles": ["admin"],
+          "roles": ["admin", "owner"],
           "propagate_claims": [
             ["sub", "X-User-Id"]
           ],
@@ -648,6 +661,153 @@
           "host": ["http://productservice:8083"]
         }
       ]
+    },
+
+    {
+      "endpoint": "/api/news",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "url_pattern": "/api/news",
+          "method": "GET",
+          "encoding": "no-op",
+          "host": ["http://newsservice:8085"]
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/news/{slug}",
+      "method": "GET",
+      "encoding": "json",
+      "backend": [
+        {
+          "url_pattern": "/api/news/{slug}",
+          "method": "GET",
+          "encoding": "json",
+          "host": ["http://newsservice:8085"]
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/news",
+      "method": "POST",
+      "encoding": "json",
+      "input_headers": ["Authorization", "X-User-Id", "Content-Type"],
+      "backend": [
+        {
+          "url_pattern": "/api/news",
+          "method": "POST",
+          "encoding": "json",
+          "host": ["http://newsservice:8085"]
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://keycloak:8080/realms/main_one/protocol/openid-connect/certs",
+          "disable_jwk_security": true,
+          "cache": true,
+          "cache_duration": 900,
+          "roles_key": "realm_access.roles",
+          "roles_key_is_nested": true,
+          "roles": ["admin", "owner"],
+          "propagate_claims": [
+            ["sub", "X-User-Id"]
+          ],
+          "operation_debug": true
+        }
+      }
+    },
+    {
+      "endpoint": "/api/news/{id}",
+      "method": "PUT",
+      "encoding": "json",
+      "input_headers": ["Authorization", "X-User-Id", "Content-Type"],
+      "backend": [
+        {
+          "url_pattern": "/api/news/{id}",
+          "method": "PUT",
+          "encoding": "json",
+          "host": ["http://newsservice:8085"]
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://keycloak:8080/realms/main_one/protocol/openid-connect/certs",
+          "disable_jwk_security": true,
+          "cache": true,
+          "cache_duration": 900,
+          "roles_key": "realm_access.roles",
+          "roles_key_is_nested": true,
+          "roles": ["admin", "owner"],
+          "propagate_claims": [
+            ["sub", "X-User-Id"]
+          ],
+          "operation_debug": true
+        }
+      }
+    },
+    {
+      "endpoint": "/api/news/{id}",
+      "method": "DELETE",
+      "encoding": "json",
+      "input_headers": ["Authorization", "X-User-Id"],
+      "backend": [
+        {
+          "url_pattern": "/api/news/{id}",
+          "method": "DELETE",
+          "encoding": "json",
+          "host": ["http://newsservice:8085"]
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://keycloak:8080/realms/main_one/protocol/openid-connect/certs",
+          "disable_jwk_security": true,
+          "cache": true,
+          "cache_duration": 900,
+          "roles_key": "realm_access.roles",
+          "roles_key_is_nested": true,
+          "roles": ["admin", "owner"],
+          "propagate_claims": [
+            ["sub", "X-User-Id"]
+          ],
+          "operation_debug": true
+        }
+      }
+    },
+    {
+      "endpoint": "/api/news/admin/all",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "input_headers": ["Authorization", "X-User-Id"],
+      "backend": [
+        {
+          "url_pattern": "/api/news/admin/all",
+          "method": "GET",
+          "encoding": "no-op",
+          "host": ["http://newsservice:8085"]
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://keycloak:8080/realms/main_one/protocol/openid-connect/certs",
+          "disable_jwk_security": true,
+          "cache": true,
+          "cache_duration": 900,
+          "roles_key": "realm_access.roles",
+          "roles_key_is_nested": true,
+          "roles": ["admin", "owner"],
+          "propagate_claims": [
+            ["sub", "X-User-Id"]
+          ],
+          "operation_debug": true
+        }
+      }
     },
 
     {
@@ -904,123 +1064,6 @@
         }
       }
     },
-
-    {
-      "endpoint": "/api/news",
-      "method": "GET",
-      "encoding": "json",
-      "backend": [
-        {
-          "url_pattern": "/api/news",
-          "method": "GET",
-          "encoding": "json",
-          "host": ["http://newsservice:8085"]
-        }
-      ]
-    },
-    {
-      "endpoint": "/api/news/{slug}",
-      "method": "GET",
-      "encoding": "json",
-      "backend": [
-        {
-          "url_pattern": "/api/news/{slug}",
-          "method": "GET",
-          "encoding": "json",
-          "host": ["http://newsservice:8085"]
-        }
-      ]
-    },
-    {
-      "endpoint": "/api/news",
-      "method": "POST",
-      "encoding": "json",
-      "input_headers": ["Authorization", "X-User-Id", "Content-Type"],
-      "backend": [
-        {
-          "url_pattern": "/api/news",
-          "method": "POST",
-          "encoding": "json",
-          "host": ["http://newsservice:8085"]
-        }
-      ],
-      "extra_config": {
-        "auth/validator": {
-          "alg": "RS256",
-          "jwk_url": "http://keycloak:8080/realms/main_one/protocol/openid-connect/certs",
-          "disable_jwk_security": true,
-          "cache": true,
-          "cache_duration": 900,
-          "roles_key": "realm_access.roles",
-          "roles_key_is_nested": true,
-          "roles": ["admin"],
-          "propagate_claims": [
-            ["sub", "X-User-Id"]
-          ],
-          "operation_debug": true
-        }
-      }
-    },
-    {
-      "endpoint": "/api/news/{id}",
-      "method": "PUT",
-      "encoding": "json",
-      "input_headers": ["Authorization", "X-User-Id", "Content-Type"],
-      "backend": [
-        {
-          "url_pattern": "/api/news/{id}",
-          "method": "PUT",
-          "encoding": "json",
-          "host": ["http://newsservice:8085"]
-        }
-      ],
-      "extra_config": {
-        "auth/validator": {
-          "alg": "RS256",
-          "jwk_url": "http://keycloak:8080/realms/main_one/protocol/openid-connect/certs",
-          "disable_jwk_security": true,
-          "cache": true,
-          "cache_duration": 900,
-          "roles_key": "realm_access.roles",
-          "roles_key_is_nested": true,
-          "roles": ["admin"],
-          "propagate_claims": [
-            ["sub", "X-User-Id"]
-          ],
-          "operation_debug": true
-        }
-      }
-    },
-    {
-      "endpoint": "/api/news/{id}",
-      "method": "DELETE",
-      "encoding": "json",
-      "input_headers": ["Authorization", "X-User-Id"],
-      "backend": [
-        {
-          "url_pattern": "/api/news/{id}",
-          "method": "DELETE",
-          "encoding": "json",
-          "host": ["http://newsservice:8085"]
-        }
-      ],
-      "extra_config": {
-        "auth/validator": {
-          "alg": "RS256",
-          "jwk_url": "http://keycloak:8080/realms/main_one/protocol/openid-connect/certs",
-          "disable_jwk_security": true,
-          "cache": true,
-          "cache_duration": 900,
-          "roles_key": "realm_access.roles",
-          "roles_key_is_nested": true,
-          "roles": ["admin"],
-          "propagate_claims": [
-            ["sub", "X-User-Id"]
-          ],
-          "operation_debug": true
-        }
-      }
-    },
     {
       "endpoint": "/api/delivery-methods",
       "method": "GET",
@@ -1148,36 +1191,6 @@
           "method": "PATCH",
           "encoding": "json",
           "host": ["http://orderservice:8087"]
-        }
-      ],
-      "extra_config": {
-        "auth/validator": {
-          "alg": "RS256",
-          "jwk_url": "http://keycloak:8080/realms/main_one/protocol/openid-connect/certs",
-          "disable_jwk_security": true,
-          "cache": true,
-          "cache_duration": 900,
-          "roles_key": "realm_access.roles",
-          "roles_key_is_nested": true,
-          "roles": ["admin"],
-          "propagate_claims": [
-            ["sub", "X-User-Id"]
-          ],
-          "operation_debug": true
-        }
-      }
-    },
-    {
-      "endpoint": "/api/news/admin/all",
-      "method": "GET",
-      "encoding": "json",
-      "input_headers": ["Authorization", "X-User-Id"],
-      "backend": [
-        {
-          "url_pattern": "/api/news/admin/all",
-          "method": "GET",
-          "encoding": "json",
-          "host": ["http://newsservice:8085"]
         }
       ],
       "extra_config": {
