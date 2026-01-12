@@ -135,5 +135,6 @@ public class ShopController {
         UUID userUuid = UUID.fromString(userId);
         shopService.deleteShop(shopId, userUuid);
         return ResponseEntity.noContent().build();
+        
     }
 }
