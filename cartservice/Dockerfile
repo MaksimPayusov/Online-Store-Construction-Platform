@@ -1,12 +1,13 @@
-FROM maven:3.9-eclipse-temurin-17 AS build
+FROM eclipse-temurin:21-jdk AS build
 WORKDIR /app
-COPY pom.xml .
-RUN mvn dependency:go-offline
+COPY gradle ./gradle
+COPY gradlew build.gradle settings.gradle ./
+RUN chmod +x gradlew && ./gradlew dependencies --no-daemon
 COPY src ./src
-RUN mvn clean package -DskipTests
+RUN ./gradlew clean bootJar -x test --no-daemon
 
-FROM eclipse-temurin:17-jre
+FROM eclipse-temurin:21-jre
 WORKDIR /app
-COPY --from=build /app/target/cart-service-1.0.0.jar app.jar
+COPY --from=build /app/build/libs/*.jar app.jar
 EXPOSE 8084
 ENTRYPOINT ["java", "-jar", "app.jar"]

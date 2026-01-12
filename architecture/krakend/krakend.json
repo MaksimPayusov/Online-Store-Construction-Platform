@@ -4,7 +4,7 @@
   "timeout": "5000ms",
   "name": "KrakenD - API Gateway",
   "output_encoding": "no-op",
-  "port": 8080,
+  "port": 8081,
   "input_headers": [
     "Content-Type",
     "Host",
@@ -17,32 +17,57 @@
     "X-User-Role",
     "X-User-Id"
   ],
+  "extra_config": {
+    "security/cors": {
+      "allow_origins": ["http://localhost:3000"],
+      "allow_methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      "allow_headers": ["*"],
+      "expose_headers": ["Content-Length"],
+      "max_age": "43200s",
+      "allow_credentials": false,
+      "debug": true
+    }
+  },
   "endpoints": [
+    {
+      "endpoint": "/api/register",
+      "method": "POST",
+      "output_encoding": "json",
+      "input_headers": ["Content-Type"],
+      "backend": [
+        {
+          "url_pattern": "/auth/registerowner",
+          "method": "POST",
+          "host": ["http://userservice:8080"],
+          "encoding": "json"
+        }
+      ]
+    },
     {
       "endpoint": "/register",
       "method": "POST",
+      "output_encoding": "json",
+      "input_headers": ["Content-Type"],
       "backend": [
         {
           "url_pattern": "/auth/register",
           "method": "POST",
-          "host": [
-            "http://userservice:8080"
-          ],
-          "encoding": "no-op"       
+          "host": ["http://userservice:8080"],
+          "encoding": "json"
         }
       ]
     },
     {
       "endpoint": "/auth/registerowner",
       "method": "POST",
+      "output_encoding": "json",
+      "input_headers": ["Content-Type"],
       "backend": [
         {
           "url_pattern": "/auth/registerowner",
           "method": "POST",
-          "host": [
-            "http://userservice:8080"
-          ],
-          "encoding": "no-op"
+          "host": ["http://userservice:8080"],
+          "encoding": "json"
         }
       ]
     },

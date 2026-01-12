@@ -1,17 +1,18 @@
 package com.example.fileservice.config;
 
-
 import io.minio.BucketExistsArgs;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.SetBucketPolicyArgs;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class MinioInitializer {
 
     private final MinioClient minioClient;
@@ -19,9 +20,36 @@ public class MinioInitializer {
     @Value("${minio.bucket-name}")
     private String bucketName;
 
+    @Value("${minio.init.retry-count:3}")
+    private int retryCount;
+
+    @Value("${minio.init.retry-delay:5000}")
+    private long retryDelay;
+
     @PostConstruct
     public void init() {
-        setupBucketAndPolicy();
+        initWithRetry();
+    }
+
+    private void initWithRetry() {
+        for (int attempt = 1; attempt <= retryCount; attempt++) {
+            try {
+                setupBucketAndPolicy();
+                return;
+            } catch (Exception e) {
+                log.warn("[MinIO] Initialization attempt {}/{} failed: {}", attempt, retryCount, e.getMessage());
+                if (attempt < retryCount) {
+                    try {
+                        Thread.sleep(retryDelay);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                } else {
+                    log.error("[MinIO] All initialization attempts failed. Service will start but MinIO may not be ready.");
+                }
+            }
+        }
     }
 
     public void setupBucketAndPolicy() {
@@ -38,9 +66,9 @@ public class MinioInitializer {
                         .bucket(bucketName)
                         .build()
                 );
-                System.out.println("[MinIO] Bucket '" + bucketName + "' created successfully");
+                log.info("[MinIO] Bucket '{}' created successfully", bucketName);
             } else {
-                System.out.println("[MinIO] Bucket '" + bucketName + "' already exists");
+                log.info("[MinIO] Bucket '{}' already exists", bucketName);
             }
 
             String publicReadPolicy = String.format(
@@ -56,10 +84,10 @@ public class MinioInitializer {
                             .build()
             );
             
-            System.out.println("[MinIO] Public read policy applied to bucket '" + bucketName + "'");
+            log.info("[MinIO] Public read policy applied to bucket '{}'", bucketName);
 
         } catch (Exception e) {
-            System.err.println("[MinIO] Setup failed: " + e.getMessage());
+            log.error("[MinIO] Setup failed: {}", e.getMessage());
             throw new RuntimeException("MinIO setup failed", e);
         }
     }

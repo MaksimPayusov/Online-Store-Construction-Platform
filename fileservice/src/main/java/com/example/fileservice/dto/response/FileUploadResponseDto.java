@@ -18,5 +18,7 @@ public class FileUploadResponseDto {
     private String originalFileName;
     private Long fileSize;
     private String contentType;
+    private String category;
+    private String thumbnailUrl;
     private LocalDateTime uploadedAt;
 }
