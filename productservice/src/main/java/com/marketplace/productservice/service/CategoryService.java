@@ -50,6 +50,18 @@ public class CategoryService {
     }
 
     @Transactional(readOnly = true)
+    public List<CategoryResponseDto> getCategoriesByShopId(UUID shopId) {
+        return categoryRepository.findByShopId(shopId).stream()
+            .map(categoryMapper::toDto)
+            .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void deleteByShopId(UUID shopId) {
+        categoryRepository.deleteByShopId(shopId);
+    }
+
+    @Transactional(readOnly = true)
     public List<CategoryResponseDto> getRootCategories() {
         return categoryRepository.findByParentIsNull().stream()
             .map(categoryMapper::toDto)

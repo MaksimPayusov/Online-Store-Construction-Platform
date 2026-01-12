@@ -18,6 +18,8 @@ public interface ProductRepository extends JpaRepository<Product, UUID>, JpaSpec
     
     List<Product> findAllByShopIdAndIsActive(UUID shopId, Boolean isActive);
     
+    void deleteByShopId(UUID shopId);
+    
     @Query("SELECT p FROM Product p WHERE " +
            "(:categoryId IS NULL OR p.category.id = :categoryId) AND " +
            "(:brandId IS NULL OR p.brand.id = :brandId) AND " +

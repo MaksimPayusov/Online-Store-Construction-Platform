@@ -481,6 +481,7 @@
       "endpoint": "/api/products",
       "method": "GET",
       "encoding": "json",
+      "input_query_strings": ["shopId"],
       "backend": [
         {
           "url_pattern": "/api/products",
@@ -656,6 +657,32 @@
       "backend": [
         {
           "url_pattern": "/api/categories",
+          "method": "GET",
+          "encoding": "json",
+          "host": ["http://productservice:8083"]
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/categories/shop/{shopId}",
+      "method": "GET",
+      "encoding": "json",
+      "backend": [
+        {
+          "url_pattern": "/api/categories/shop/{shopId}",
+          "method": "GET",
+          "encoding": "json",
+          "host": ["http://productservice:8083"]
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/brands/shop/{shopId}",
+      "method": "GET",
+      "encoding": "json",
+      "backend": [
+        {
+          "url_pattern": "/api/brands/shop/{shopId}",
           "method": "GET",
           "encoding": "json",
           "host": ["http://productservice:8083"]

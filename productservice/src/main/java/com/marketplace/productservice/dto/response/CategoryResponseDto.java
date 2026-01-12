@@ -15,6 +15,8 @@ public class CategoryResponseDto {
 
     private UUID id;
 
+    private UUID shopId;
+
     private String title;
 
     private UUID parentId;

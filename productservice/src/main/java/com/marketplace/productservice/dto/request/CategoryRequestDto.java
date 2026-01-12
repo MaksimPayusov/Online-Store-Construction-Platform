@@ -14,6 +14,8 @@ import java.util.UUID;
 @AllArgsConstructor
 public class CategoryRequestDto {
 
+    private UUID shopId;
+
     @NotBlank(message = "Category title is required")
     private String title;
 

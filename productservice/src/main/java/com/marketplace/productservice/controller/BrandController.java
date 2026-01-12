@@ -37,6 +37,12 @@ public class BrandController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/shop/{shopId}")
+    public ResponseEntity<List<BrandResponseDto>> getBrandsByShopId(@PathVariable UUID shopId) {
+        List<BrandResponseDto> response = brandService.getBrandsByShopId(shopId);
+        return ResponseEntity.ok(response);
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<BrandResponseDto> updateBrand(
         @PathVariable UUID id,

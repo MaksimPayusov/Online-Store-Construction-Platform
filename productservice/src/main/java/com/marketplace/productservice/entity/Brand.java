@@ -7,7 +7,9 @@ import org.hibernate.annotations.GenericGenerator;
 import java.util.UUID;
 
 @Entity
-@Table(name = "brands")
+@Table(name = "brands", indexes = {
+    @Index(name = "idx_brand_shop_id", columnList = "shop_id")
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -21,7 +23,10 @@ public class Brand {
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
-    @Column(name = "name", unique = true, nullable = false)
+    @Column(name = "shop_id")
+    private UUID shopId;
+
+    @Column(name = "name", nullable = false)
     private String name;
 
     @Column(name = "logo_url")

@@ -124,4 +124,9 @@ public class ProductService {
         }
         productRepository.deleteById(id);
     }
+
+    @Transactional
+    public void deleteByShopId(UUID shopId) {
+        productRepository.deleteByShopId(shopId);
+    }
 }

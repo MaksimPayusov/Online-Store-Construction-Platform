@@ -37,6 +37,12 @@ public class CategoryController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/shop/{shopId}")
+    public ResponseEntity<List<CategoryResponseDto>> getCategoriesByShopId(@PathVariable UUID shopId) {
+        List<CategoryResponseDto> response = categoryService.getCategoriesByShopId(shopId);
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/root")
     public ResponseEntity<List<CategoryResponseDto>> getRootCategories() {
         List<CategoryResponseDto> response = categoryService.getRootCategories();

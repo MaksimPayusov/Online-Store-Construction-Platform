@@ -42,6 +42,18 @@ public class BrandService {
             .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public List<BrandResponseDto> getBrandsByShopId(UUID shopId) {
+        return brandRepository.findByShopId(shopId).stream()
+            .map(brandMapper::toDto)
+            .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void deleteByShopId(UUID shopId) {
+        brandRepository.deleteByShopId(shopId);
+    }
+
     @Transactional
     public BrandResponseDto updateBrand(UUID id, BrandRequestDto requestDto) {
         Brand brand = brandRepository.findById(id)

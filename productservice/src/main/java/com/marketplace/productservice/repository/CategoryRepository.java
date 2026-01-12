@@ -13,4 +13,8 @@ public interface CategoryRepository extends JpaRepository<Category, UUID> {
     List<Category> findByParentId(UUID parentId);
     
     List<Category> findByParentIsNull();
+    
+    List<Category> findByShopId(UUID shopId);
+    
+    void deleteByShopId(UUID shopId);
 }
