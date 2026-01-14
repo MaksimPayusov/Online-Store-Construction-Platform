@@ -159,7 +159,7 @@ services:
       - microservices
 
   basket:
-    build: ./basket
+    build: ./cartservice
     container_name: basket
     ports:
       - "8086:8080"
@@ -172,6 +172,22 @@ services:
         condition: service_healthy
     networks:
       - microservices
+
+  # Client Storefront (Customer-facing frontend)
+  client-storefront:
+    build: ./client-storefront
+    container_name: client-storefront
+    ports:
+      - "3300:3000"
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_DEBUG: false
+      NEXT_PUBLIC_SHOP_DOMAIN: fashion-store
+      NEXT_TELEMETRY_DISABLED: 1
+    depends_on:
+      - krakend
+    networks:
+      - fashion-network
 
   fileservice:
     build: ./fileservice
@@ -339,7 +355,7 @@ services:
     image: grafana/grafana:10.3.1
     container_name: grafana
     ports:
-      - "3000:3000"
+      - "3400:3000"
     depends_on:
       prometheus:
         condition: service_healthy
