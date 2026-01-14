@@ -1,0 +1,240 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html>
+ <head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <title>Статус платежа - ЮKassa</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .status-container {
+      border: 1px solid #ddd;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+      text-align: center;
+    }
+    .success {
+      background-color: #d4edda;
+      border-color: #c3e6cb;
+      color: #155724;
+    }
+    .error {
+      background-color: #f8d7da;
+      border-color: #f5c6cb;
+      color: #721c24;
+    }
+    .pending {
+      background-color: #fff3cd;
+      border-color: #ffeaa7;
+      color: #856404;
+    }
+    .loading {
+      text-align: center;
+      color: #666;
+    }
+    .payment-details {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 20px 0;
+    }
+    .payment-details h3 {
+      margin-top: 0;
+    }
+    .payment-details ul {
+      text-align: left;
+    }
+    .btn {
+      display: inline-block;
+      padding: 10px 20px;
+      margin: 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .btn-primary {
+      background-color: #007bff;
+      color: white;
+    }
+    .btn-secondary {
+      background-color: #6c757d;
+      color: white;
+    }
+    .btn:hover {
+      opacity: 0.8;
+    }
+  </style>
+ </head>
+ <body>
+  <h1>Статус платежа</h1>
+
+  <div id="loading" class="loading">
+    Проверка статуса платежа...
+  </div>
+
+  <div id="status-container" class="status-container" style="display: none;">
+    <h2 id="status-title"></h2>
+    <p id="status-message"></p>
+  </div>
+
+  <div id="payment-details" class="payment-details" style="display: none;">
+    <h3>Детали платежа</h3>
+    <ul>
+      <li><strong>ID платежа:</strong> <span id="payment-id"></span></li>
+      <li><strong>Сумма:</strong> <span id="payment-amount"></span> <span id="payment-currency"></span></li>
+      <li><strong>Описание:</strong> <span id="payment-description"></span></li>
+      <li><strong>Статус:</strong> <span id="payment-status"></span></li>
+      <li><strong>Дата создания:</strong> <span id="payment-created"></span></li>
+      <li id="payment-captured-row" style="display: none;"><strong>Дата списания:</strong> <span id="payment-captured"></span></li>
+    </ul>
+  </div>
+
+  <div id="actions" style="text-align: center; display: none;">
+    <a href="/" class="btn btn-primary">На главную</a>
+    <button id="refresh-btn" class="btn btn-secondary">Обновить статус</button>
+  </div>
+
+  <script>
+    // Получение параметров из URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentId = urlParams.get('paymentId');
+    const status = urlParams.get('status');
+
+    let refreshInterval;
+
+    // Функция проверки статуса платежа
+    async function checkPaymentStatus() {
+      if (!paymentId) {
+        showError('ID платежа не указан');
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/payment-methods/yookassa/payment-status/${paymentId}`);
+        
+        if (!response.ok) {
+          throw new Error('Платеж не найден');
+        }
+
+        const paymentData = await response.json();
+        displayPaymentStatus(paymentData);
+        
+      } catch (error) {
+        console.error('Error:', error);
+        showError('Не удалось проверить статус платежа: ' + error.message);
+      }
+    }
+
+    // Функция отображения статуса платежа
+    function displayPaymentStatus(paymentData) {
+      document.getElementById('loading').style.display = 'none';
+      
+      const statusContainer = document.getElementById('status-container');
+      const statusTitle = document.getElementById('status-title');
+      const statusMessage = document.getElementById('status-message');
+      
+      // Заполнение деталей платежа
+      document.getElementById('payment-id').textContent = paymentData.id;
+      document.getElementById('payment-amount').textContent = paymentData.amount.value;
+      document.getElementById('payment-currency').textContent = paymentData.amount.currency;
+      document.getElementById('payment-description').textContent = paymentData.description;
+      document.getElementById('payment-status').textContent = getStatusText(paymentData.status);
+      document.getElementById('payment-created').textContent = new Date(paymentData.created_at).toLocaleString();
+      
+      if (paymentData.captured_at) {
+        document.getElementById('payment-captured').textContent = new Date(paymentData.captured_at).toLocaleString();
+        document.getElementById('payment-captured-row').style.display = 'block';
+      }
+      
+      document.getElementById('payment-details').style.display = 'block';
+      document.getElementById('actions').style.display = 'block';
+      
+      // Определение статуса и соответствующего сообщения
+      switch (paymentData.status) {
+        case 'succeeded':
+          statusContainer.className = 'status-container success';
+          statusTitle.textContent = '✅ Платеж успешно завершен';
+          statusMessage.textContent = 'Оплата прошла успешно. Спасибо за ваш заказ!';
+          clearInterval(refreshInterval); // Останавливаем обновление для успешных платежей
+          break;
+          
+        case 'pending':
+          statusContainer.className = 'status-container pending';
+          statusTitle.textContent = '⏳ Платеж в обработке';
+          statusMessage.textContent = 'Ваш платеж находится в обработке. Пожалуйста, подождите...';
+          // Продолжаем проверять статус каждые 5 секунд
+          if (!refreshInterval) {
+            refreshInterval = setInterval(checkPaymentStatus, 5000);
+          }
+          break;
+          
+        case 'canceled':
+          statusContainer.className = 'status-container error';
+          statusTitle.textContent = '❌ Платеж отменен';
+          statusMessage.textContent = 'Платеж был отменен. Вы можете попробовать оплатить еще раз.';
+          clearInterval(refreshInterval); // Останавливаем обновление для отмененных платежей
+          break;
+          
+        default:
+          statusContainer.className = 'status-container error';
+          statusTitle.textContent = '❓ Неизвестный статус';
+          statusMessage.textContent = `Статус платежа: ${paymentData.status}`;
+          clearInterval(refreshInterval);
+      }
+      
+      statusContainer.style.display = 'block';
+    }
+
+    // Функция получения текстового представления статуса
+    function getStatusText(status) {
+      switch (status) {
+        case 'succeeded': return 'Успешно завершен';
+        case 'pending': return 'В обработке';
+        case 'canceled': return 'Отменен';
+        case 'waiting_for_capture': return 'Ожидает списания';
+        default: return status;
+      }
+    }
+
+    // Функция отображения ошибки
+    function showError(message) {
+      document.getElementById('loading').style.display = 'none';
+      
+      const statusContainer = document.getElementById('status-container');
+      statusContainer.className = 'status-container error';
+      document.getElementById('status-title').textContent = '❌ Ошибка';
+      document.getElementById('status-message').textContent = message;
+      statusContainer.style.display = 'block';
+      
+      document.getElementById('actions').style.display = 'block';
+    }
+
+    // Обработчик кнопки обновления
+    document.getElementById('refresh-btn').addEventListener('click', function() {
+      document.getElementById('loading').style.display = 'block';
+      document.getElementById('status-container').style.display = 'none';
+      checkPaymentStatus();
+    });
+
+    // Инициализация при загрузке страницы
+    if (paymentId) {
+      checkPaymentStatus();
+    } else {
+      showError('ID платежа не указан в параметрах URL');
+    }
+
+    // Очистка интервала при закрытии страницы
+    window.addEventListener('beforeunload', function() {
+      if (refreshInterval) {
+        clearInterval(refreshInterval);
+      }
+    });
+  </script>
+ </body>
+</html>

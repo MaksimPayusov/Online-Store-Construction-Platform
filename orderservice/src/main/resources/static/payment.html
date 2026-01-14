@@ -1,0 +1,190 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html>
+ <head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <title>Прием платежа с помощью виджета ЮKassa</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .payment-container {
+      border: 1px solid #ddd;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+    .test-info {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 20px 0;
+    }
+    .loading {
+      text-align: center;
+      color: #666;
+    }
+    .error {
+      color: #dc3545;
+      background-color: #f8d7da;
+      padding: 10px;
+      border-radius: 5px;
+      margin: 10px 0;
+    }
+  </style>
+
+  <!--Подключение библиотеки для инициализации виджета ЮKassa-->
+  <script src="https://yookassa.ru/checkout-widget/v1/checkout-widget.js"></script>
+ </head>
+ <body>
+  <h1>Оплата заказа</h1>
+  
+  <div class="payment-container">
+    <h2>Детали платежа</h2>
+    <p><strong>Сумма:</strong> <span id="payment-amount">2.00</span> RUB</p>
+    <p><strong>Описание:</strong> <span id="payment-description">Заказ №72</span></p>
+  </div>
+
+  <div id="loading" class="loading">
+    Загрузка платежной формы...
+  </div>
+
+  <div id="error-message" class="error" style="display: none;"></div>
+
+  <!--Контейнер, в котором будет отображаться платежная форма-->
+  <div id="payment-form" style="display: none;"></div>
+
+  <div class="test-info">
+    <h3>Данные банковской карты для оплаты в <b>тестовом магазине</b>:</h3>
+    <ul>
+      <li><b>номер</b> — <b>5555 5555 5555 4477</b></li>
+      <li><b>срок действия</b> — <b>01/30</b> (или другая дата, больше текущей)</li>
+      <li><b>CVC</b> — <b>123</b> (или три любые цифры)</li>
+      <li><b>код для прохождения 3-D Secure</b> — <b>123</b> (или три любые цифры)</li>
+    </ul>
+    <p><a href="https://yookassa.ru/developers/payment-acceptance/testing-and-going-live/testing#test-bank-card" target="_blank">Другие тестовые банковские карты</a></p>
+  </div>
+
+  <script>
+    // Получение параметров из URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const amount = urlParams.get('amount') || '2.00';
+    const description = urlParams.get('description') || 'Заказ №72';
+    const paymentId = urlParams.get('paymentId');
+
+    // Обновление информации о платеже на странице
+    document.getElementById('payment-amount').textContent = amount;
+    document.getElementById('payment-description').textContent = description;
+
+    let checkout;
+
+    // Функция создания платежа
+    async function createPayment() {
+      console.log('createPayment called with amount:', amount, 'description:', description);
+      
+      try {
+        const url = `/api/payment-methods/yookassa/create-payment?amount=${amount}&currency=RUB&description=${encodeURIComponent(description)}`;
+        console.log('Fetching URL:', url);
+        
+        const response = await fetch(url);
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Error response body:', errorText);
+          throw new Error(`Ошибка при создании платежа: ${response.status} - ${errorText}`);
+        }
+
+        const paymentData = await response.json();
+        console.log('Payment data received:', paymentData);
+        
+        // Обновляем paymentId в URL для корректного перенаправления
+        const newUrl = `${window.location.pathname}?amount=${amount}&description=${encodeURIComponent(description)}&paymentId=${paymentData.id}`;
+        console.log('Updating URL to:', newUrl);
+        window.history.replaceState({}, '', newUrl);
+        
+        initializeWidget(paymentData.confirmation.confirmationToken, paymentData.id);
+        
+      } catch (error) {
+        console.error('Error in createPayment:', error);
+        showError('Не удалось создать платеж: ' + error.message);
+      }
+    }
+
+    // Функция инициализации виджета
+    function initializeWidget(confirmationToken, paymentId) {
+      // Инициализация виджета. Все параметры обязательные.
+      checkout = new window.YooMoneyCheckoutWidget({
+        confirmation_token: confirmationToken, //Токен, который перед проведением оплаты нужно получить от ЮKassa
+        return_url: `${window.location.origin}/payment-complete.html?paymentId=${paymentId}`, //Ссылка на страницу завершения оплаты
+
+        //При необходимости можно изменить цвета виджета, подробные настройки см. в документации
+        customization: {
+          //Настройка цветовой схемы, минимум один параметр, значения цветов в HEX
+          colors: {
+            //Цвет акцентных элементов: кнопка Заплатить, выбранные переключатели, опции и текстовые поля
+            control_primary: '#00BF96', //Значение цвета в HEX
+
+            //Цвет платежной формы и ее элементов
+            background: '#F2F3F5' //Значение цвета в HEX
+          }
+        },
+        error_callback: function(error) {
+          console.log(error);
+          showError('Ошибка виджета: ' + error.message);
+        }
+      });
+
+      //Отображение платежной формы в контейнере
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('payment-form').style.display = 'block';
+      checkout.render('payment-form');
+    }
+
+    // Функция отображения ошибки
+    function showError(message) {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('error-message').textContent = message;
+      document.getElementById('error-message').style.display = 'block';
+    }
+
+    // Инициализация платежа при загрузке страницы
+    // Всегда создаем новый платеж для embedded виджета
+    createPayment();
+
+    // Функция проверки статуса платежа (временно отключена для embedded)
+    async function checkPaymentStatus(paymentId) {
+      console.log('checkPaymentStatus called for embedded payment - skipping');
+      return;
+      
+      try {
+        const response = await fetch(`/api/payment-methods/yookassa/payment-status/${paymentId}`);
+        
+        if (!response.ok) {
+          throw new Error('Платеж не найден');
+        }
+
+        const paymentData = await response.json();
+        
+        if (paymentData.status === 'pending') {
+          // Если платеж в ожидании, инициализируем виджет с существующим токеном
+          initializeWidget(paymentData.confirmation.confirmationToken);
+        } else if (paymentData.status === 'succeeded') {
+          // Если платеж уже успешен, перенаправляем на страницу завершения
+          window.location.href = `/payment-complete.html?paymentId=${paymentId}&status=succeeded`;
+        } else if (paymentData.status === 'canceled') {
+          // Если платеж отменен, показываем ошибку
+          showError('Платеж был отменен');
+        }
+        
+      } catch (error) {
+        console.error('Error:', error);
+        showError('Не удалось проверить статус платежа: ' + error.message);
+      }
+    }
+  </script>
+ </body>
+</html>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Оплата заказа</title>
+    <script src="https://yookassa.ru/checkout-widget/v1/checkout-widget.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .payment-container {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .test-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Оплата заказа</h1>
+    
+    <div class="payment-container">
+        <h2>Детали платежа</h2>
+        <p><strong>Сумма:</strong> <span th:text="${amount}">2.00</span> <span th:text="${currency}">RUB</span></p>
+        <p><strong>Описание:</strong> <span th:text="${description}">Заказ №72</span></p>
+        <p><strong>ID платежа:</strong> <span th:text="${paymentId}">payment-id</span></p>
+    </div>
+
+    <div id="payment-form"></div>
+
+    <div class="test-info">
+        <h3>Данные банковской карты для оплаты в <b>тестовом магазине</b>:</h3>
+        <ul>
+            <li><b>номер</b> — <b>5555 5555 5555 4477</b></li>
+            <li><b>срок действия</b> — <b>01/30</b> (или другая дата, больше текущей)</li>
+            <li><b>CVC</b> — <b>123</b> (или три любые цифры)</li>
+            <li><b>код для прохождения 3-D Secure</b> — <b>123</b> (или три любые цифры)</li>
+        </ul>
+    </div>
+
+    <script>
+        // Инициализация виджета с токеном от сервера
+        const checkout = new window.YooMoneyCheckoutWidget({
+            confirmation_token: '[[${confirmationToken}]]', // Токен, полученный от ЮKassa
+            return_url: '[[${returnUrl}]]', // Ссылка на страницу завершения оплаты
+
+            customization: {
+                colors: {
+                    control_primary: '#00BF96',
+                    background: '#F2F3F5'
+                }
+            },
+            error_callback: function(error) {
+                console.log(error);
+                alert('Ошибка виджета: ' + error.message);
+            }
+        });
+
+        // Отображение платежной формы
+        checkout.render('payment-form');
+    </script>
+</body>
+</html>

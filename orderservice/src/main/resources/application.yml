@@ -50,6 +50,11 @@ rabbitmq:
 server:
   port: ${SERVER_PORT:8087}
 
+yookassa:
+  shop-id: ${YOOKASSA_SHOP_ID:1246914}
+  secret-key: ${YOOKASSA_SECRET_KEY:test_LZEYYDY3inXYgAlSiROF3a7L4h4z0_cxZ2l4IuMMPxM}
+  api-url: ${YOOKASSA_API_URL:https://api.yookassa.ru/v3/payments}
+
 logging:
   level:
     com.marketplace.orderservice: ${LOG_LEVEL:INFO}
