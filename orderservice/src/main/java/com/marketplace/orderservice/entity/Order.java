@@ -58,6 +58,37 @@ public class Order {
     @Builder.Default
     private List<OrderItem> items = new ArrayList<>();
 
+    // Yandex Delivery fields
+    @Column(name = "yandex_pickup_point_id", length = 100)
+    private String yandexPickupPointId;
+
+    @Column(name = "yandex_pickup_point_address", length = 500)
+    private String yandexPickupPointAddress;
+
+    @Column(name = "yandex_pickup_point_name", length = 255)
+    private String yandexPickupPointName;
+
+    @Column(name = "yandex_latitude")
+    private Double yandexLatitude;
+
+    @Column(name = "yandex_longitude")
+    private Double yandexLongitude;
+
+    @Column(name = "yandex_delivery_price", precision = 10, scale = 2)
+    private BigDecimal yandexDeliveryPrice;
+
+    @Column(name = "yandex_delivery_term")
+    private Integer yandexDeliveryTerm;
+
+    @Column(name = "yandex_pickup_point_type", length = 50)
+    private String yandexPickupPointType;
+
+    @Column(name = "yandex_work_schedule", length = 500)
+    private String yandexWorkSchedule;
+
+    @Column(name = "yandex_phone", length = 50)
+    private String yandexPhone;
+
     public void addItem(OrderItem item) {
         items.add(item);
         item.setOrder(this);

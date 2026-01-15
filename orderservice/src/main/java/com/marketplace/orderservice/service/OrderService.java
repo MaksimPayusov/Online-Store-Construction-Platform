@@ -61,19 +61,41 @@ public class OrderService {
                 .map(item -> item.getPricePerItem().multiply(BigDecimal.valueOf(item.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
+        // Use Yandex delivery price if present, otherwise use delivery method price
+        BigDecimal deliveryPrice = (requestDto.getYandexDelivery() != null && requestDto.getYandexDelivery().getDeliveryPrice() != null)
+                ? requestDto.getYandexDelivery().getDeliveryPrice()
+                : deliveryMethod.getPrice();
+
         BigDecimal totalAmount = itemsTotal
-                .add(deliveryMethod.getPrice())
+                .add(deliveryPrice)
                 .add(paymentMethod.getPrice());
 
         // Create order
-        Order order = Order.builder()
+        Order.OrderBuilder orderBuilder = Order.builder()
                 .userId(userId)
                 .recipientId(requestDto.getRecipientId())
                 .deliveryMethod(deliveryMethod)
                 .paymentMethod(paymentMethod)
                 .status(OrderStatus.NEW)
-                .totalAmount(totalAmount)
-                .build();
+                .totalAmount(totalAmount);
+
+        // Add Yandex delivery data if present
+        if (requestDto.getYandexDelivery() != null) {
+            var yandex = requestDto.getYandexDelivery();
+            orderBuilder
+                    .yandexPickupPointId(yandex.getPickupPointId())
+                    .yandexPickupPointAddress(yandex.getPickupPointAddress())
+                    .yandexPickupPointName(yandex.getPickupPointName())
+                    .yandexLatitude(yandex.getLatitude())
+                    .yandexLongitude(yandex.getLongitude())
+                    .yandexDeliveryPrice(yandex.getDeliveryPrice())
+                    .yandexDeliveryTerm(yandex.getDeliveryTerm())
+                    .yandexPickupPointType(yandex.getPickupPointType())
+                    .yandexWorkSchedule(yandex.getWorkSchedule())
+                    .yandexPhone(yandex.getPhone());
+        }
+
+        Order order = orderBuilder.build();
 
         // Add order items
         for (OrderItemRequestDto itemDto : requestDto.getItems()) {
@@ -90,8 +112,11 @@ public class OrderService {
         Order savedOrder = orderRepository.save(order);
         log.info("Order created successfully with id: {}", savedOrder.getId());
 
-        // Publish RabbitMQ events
-        publishStockDecreaseEvents(requestDto.getItems());
+        // НЕ отправляем события на уменьшение остатков при создании заказа
+        // Остатки уменьшаются только после подтверждения оплаты через webhook
+        // publishStockDecreaseEvents(requestDto.getItems());
+
+        // Отправляем событие о создании заказа (для уведомлений и т.д.)
         publishOrderCompletedEvent(userId, savedOrder.getId());
 
         return orderMapper.toOrderResponseDto(savedOrder);
@@ -116,6 +141,13 @@ public class OrderService {
         }
 
         return orderMapper.toOrderResponseDto(order);
+    }
+
+    @Transactional(readOnly = true)
+    public List<OrderResponseDto> getOrdersByShopId(UUID shopId) {
+        log.info("Fetching orders for shop: {}", shopId);
+        List<Order> orders = orderRepository.findByShopIdWithDetails(shopId);
+        return orderMapper.toOrderResponseDtoList(orders);
     }
 
     @Transactional

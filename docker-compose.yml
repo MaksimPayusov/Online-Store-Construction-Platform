@@ -150,6 +150,9 @@ services:
       RABBITMQ_USERNAME: admin
       RABBITMQ_PASSWORD: admin
       SERVER_PORT: 8087
+      YANDEX_DELIVERY_API_TOKEN: y0__xCd-KvSCBix9Bwgp8OMiRapyG8u0V5lGR_NrN_ay2g-CTuTww
+      YANDEX_DELIVERY_SOURCE_STATION: 05e809bb-4521-42d9-a936-0fb0744c0fb3
+      YANDEX_DELIVERY_DEFAULT_WEIGHT: 10000
     depends_on:
       db:
         condition: service_healthy
@@ -162,18 +165,14 @@ services:
     build: ./cartservice
     container_name: basket
     ports:
-      - "8086:8084"
+      - "8086:8080"
     environment:
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      RABBITMQ_HOST: rabbitmq
-      RABBITMQ_PORT: 5672
-      RABBITMQ_USERNAME: admin
-      RABBITMQ_PASSWORD: admin
-      SERVER_PORT: 8084
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/basket_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
     depends_on:
-      - redis
-      - rabbitmq
+      db:
+        condition: service_healthy
     networks:
       - microservices
 
@@ -361,7 +360,7 @@ services:
     image: grafana/grafana:10.3.1
     container_name: grafana
     ports:
-      - "3400:3000"
+      - "3000:3000"
     depends_on:
       prometheus:
         condition: service_healthy

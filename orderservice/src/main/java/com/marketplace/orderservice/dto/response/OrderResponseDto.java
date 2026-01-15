@@ -26,4 +26,16 @@ public class OrderResponseDto {
     private BigDecimal totalAmount;
     private LocalDateTime createdAt;
     private List<OrderItemResponseDto> items;
+
+    // Yandex Delivery fields
+    private String yandexPickupPointId;
+    private String yandexPickupPointAddress;
+    private String yandexPickupPointName;
+    private Double yandexLatitude;
+    private Double yandexLongitude;
+    private BigDecimal yandexDeliveryPrice;
+    private Integer yandexDeliveryTerm;
+    private String yandexPickupPointType;
+    private String yandexWorkSchedule;
+    private String yandexPhone;
 }

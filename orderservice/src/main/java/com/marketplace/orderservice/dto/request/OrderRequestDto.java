@@ -1,5 +1,6 @@
 package com.marketplace.orderservice.dto.request;
 
+import com.marketplace.orderservice.dto.request.YandexDeliveryDto;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -29,4 +30,7 @@ public class OrderRequestDto {
     @NotEmpty(message = "Order must contain at least one item")
     @Valid
     private List<OrderItemRequestDto> items;
+
+    // Yandex Delivery information (optional)
+    private YandexDeliveryDto yandexDelivery;
 }
