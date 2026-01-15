@@ -38,6 +38,23 @@ public class NewsController {
     }
 
     /**
+     * PUBLIC ENDPOINT: Get paginated list of published news by shop
+     */
+    @GetMapping("/shop/{shopId}")
+    public ResponseEntity<Page<NewsResponseDto>> getPublishedNewsByShop(
+        @PathVariable String shopId,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size,
+        @RequestParam(required = false) Boolean publishedOnly,
+        @RequestParam(required = false) String tag,
+        @RequestParam(required = false) String search
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<NewsResponseDto> news = newsService.getPublishedNews(pageable);
+        return ResponseEntity.ok(news);
+    }
+
+    /**
      * PUBLIC ENDPOINT: Get news article by slug
      */
     @GetMapping("/{slug}")

@@ -1,4 +1,5 @@
 {
     "java.configuration.updateBuildConfiguration": "interactive",
-    "makefile.configureOnOpen": false
+    "makefile.configureOnOpen": false,
+    "java.compile.nullAnalysis.mode": "automatic"
 }

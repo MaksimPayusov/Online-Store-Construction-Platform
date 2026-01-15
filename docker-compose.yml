@@ -52,7 +52,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
-        
+
   krakend:
     image: devopsfaith/krakend:2.9
     container_name: krakend
@@ -162,14 +162,18 @@ services:
     build: ./cartservice
     container_name: basket
     ports:
-      - "8086:8080"
+      - "8086:8084"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/basket_db
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: admin
+      RABBITMQ_PASSWORD: admin
+      SERVER_PORT: 8084
     depends_on:
-      db:
-        condition: service_healthy
+      - redis
+      - rabbitmq
     networks:
       - microservices
 
@@ -182,7 +186,9 @@ services:
     environment:
       NODE_ENV: production
       NEXT_PUBLIC_DEBUG: false
-      NEXT_PUBLIC_SHOP_DOMAIN: fashion-store
+      NEXT_PUBLIC_SHOP_DOMAIN: default
+      NEXT_PUBLIC_API_URL: http://localhost:8081
+      API_URL: http://krakend:8081
       NEXT_TELEMETRY_DISABLED: 1
     depends_on:
       - krakend
@@ -209,8 +215,8 @@ services:
       - microservices
       - files
       - fashion-network
-    
-    
+
+
   userservice:
     build: ./userservice
     container_name: userservice
@@ -314,7 +320,7 @@ services:
       retries: 5
     networks:
       - observability
-    
+
 
   tempo:
     image: grafana/tempo:2.4.1
@@ -416,7 +422,7 @@ volumes:
   rabbitmq_data:
   tempo_data:
   postgres_data:
-  
+
 networks:
   #нетворк для кейклоака
   keycloak_net:
@@ -434,6 +440,3 @@ networks:
   # Fashion admin frontend network
   fashion-network:
     driver: bridge
-
-
-

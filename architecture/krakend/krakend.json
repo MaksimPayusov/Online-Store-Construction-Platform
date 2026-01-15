@@ -19,7 +19,7 @@
   ],
   "extra_config": {
     "security/cors": {
-      "allow_origins": ["http://localhost:3000"],
+      "allow_origins": ["*"],
       "allow_methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
       "allow_headers": ["*"],
       "expose_headers": ["Content-Length"],
@@ -173,6 +173,60 @@
           "operation_debug": true
         }
       }
+    },
+    {
+      "endpoint": "/api/sizes",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "url_pattern": "/api/sizes",
+          "method": "GET",
+          "host": ["http://productservice:8083"],
+          "encoding": "no-op"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/sizes",
+      "method": "POST",
+      "input_headers": ["Authorization", "X-User-Id", "Content-Type"],
+      "output_encoding": "json",
+      "backend": [
+        {
+          "url_pattern": "/api/sizes",
+          "method": "POST",
+          "host": ["http://productservice:8083"],
+          "encoding": "json"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/product-sizes/product/{productId}",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "url_pattern": "/api/product-sizes/product/{productId}",
+          "method": "GET",
+          "host": ["http://productservice:8083"],
+          "encoding": "no-op"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/product-sizes",
+      "method": "POST",
+      "input_headers": ["Authorization", "X-User-Id", "Content-Type"],
+      "output_encoding": "json",
+      "backend": [
+        {
+          "url_pattern": "/api/product-sizes",
+          "method": "POST",
+          "host": ["http://productservice:8083"],
+          "encoding": "json"
+        }
+      ]
     },
     {
       "endpoint": "/auth/assign-role",
@@ -717,6 +771,20 @@
       ]
     },
     {
+      "endpoint": "/api/news/shop/{shopId}",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "input_query_strings": ["publishedOnly", "page", "size", "tag", "search"],
+      "backend": [
+        {
+          "url_pattern": "/api/news/shop/{shopId}",
+          "method": "GET",
+          "encoding": "no-op",
+          "host": ["http://newsservice:8085"]
+        }
+      ]
+    },
+    {
       "endpoint": "/api/news",
       "method": "POST",
       "encoding": "json",
@@ -1241,6 +1309,3 @@
   ]
 
 }
-
-
-
