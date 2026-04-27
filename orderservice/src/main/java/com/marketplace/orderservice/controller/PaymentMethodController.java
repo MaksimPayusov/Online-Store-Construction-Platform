@@ -37,10 +37,14 @@ public class PaymentMethodController {
     public Mono<ResponseEntity<YooKassaPaymentResponse>> createYooKassaPayment(
             @RequestParam String amount,
             @RequestParam(defaultValue = "RUB") String currency,
-            @RequestParam String description) {
-        log.info("Received YooKassa payment creation request for amount: {} {}, description: {}", amount, currency, description);
-        
-        return yooKassaService.createPayment(amount, currency, description)
+            @RequestParam String description,
+            @RequestParam(required = false) String orderId,
+            @RequestParam(required = false) String returnUrl) {
+        validateOrderId(orderId);
+        log.info("Received YooKassa payment creation request for amount: {} {}, description: {}, orderId: {}",
+                amount, currency, description, orderId);
+
+        return yooKassaService.createPayment(amount, currency, description, orderId, returnUrl)
                 .map(ResponseEntity::ok)
                 .onErrorResume(error -> {
                     log.error("Error creating payment: {}", error.getMessage(), error);
@@ -53,15 +57,30 @@ public class PaymentMethodController {
     public Mono<ResponseEntity<YooKassaPaymentResponse>> createYooKassaPaymentGet(
             @RequestParam String amount,
             @RequestParam(defaultValue = "RUB") String currency,
-            @RequestParam String description) {
-        log.info("Received YooKassa payment creation GET request for amount: {} {}, description: {}", amount, currency, description);
-        
-        return yooKassaService.createPayment(amount, currency, description)
+            @RequestParam String description,
+            @RequestParam(required = false) String orderId,
+            @RequestParam(required = false) String returnUrl) {
+        validateOrderId(orderId);
+        log.info("Received YooKassa payment creation GET request for amount: {} {}, description: {}, orderId: {}",
+                amount, currency, description, orderId);
+
+        return yooKassaService.createPayment(amount, currency, description, orderId, returnUrl)
                 .map(ResponseEntity::ok)
                 .onErrorResume(error -> {
                     log.error("Error creating payment via GET: {}", error.getMessage(), error);
                     return Mono.just(ResponseEntity.badRequest().build());
                 });
+    }
+
+    private void validateOrderId(String orderId) {
+        if (orderId == null || orderId.isBlank()) {
+            return;
+        }
+        try {
+            java.util.UUID.fromString(orderId);
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException("Invalid orderId format: " + orderId);
+        }
     }
     
     @GetMapping("/yookassa/payment-status/{paymentId}")

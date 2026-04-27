@@ -1159,6 +1159,33 @@
         }
       }
     },
+
+    {
+      "endpoint": "/api/yandex-delivery/config",
+      "method": "GET",
+      "encoding": "json",
+      "backend": [
+        {
+          "url_pattern": "/api/yandex-delivery/config",
+          "method": "GET",
+          "encoding": "json",
+          "host": ["http://orderservice:8087"]
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/yandex-delivery/widget.js",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "url_pattern": "/api/yandex-delivery/widget.js",
+          "method": "GET",
+          "encoding": "no-op",
+          "host": ["http://orderservice:8087"]
+        }
+      ]
+    },
     {
       "endpoint": "/api/delivery-methods",
       "method": "GET",

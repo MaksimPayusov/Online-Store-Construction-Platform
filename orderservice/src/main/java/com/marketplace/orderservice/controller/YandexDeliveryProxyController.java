@@ -124,4 +124,101 @@ public class YandexDeliveryProxyController {
                 "apiAvailable", properties.getApiToken() != null
         ));
     }
+
+    /**
+     * Проксирование скрипта виджета Яндекс.Доставки.
+     * Нужен для случаев, когда прямую загрузку с yastatic.net блокирует окружение (CSP/сеть/SSL).
+     */
+    @GetMapping(value = "/widget.js", produces = "application/javascript")
+    public Mono<ResponseEntity<String>> getWidgetScript() {
+        String script = """
+                (function(w){
+                  function ensureEl(id){
+                    var el = document.getElementById(id);
+                    return el;
+                  }
+
+                  function renderFallback(container, params){
+                    container.innerHTML = '';
+                    container.style.position = 'relative';
+                    container.style.width = (params && params.size && params.size.width) ? params.size.width : '100%';
+                    container.style.height = (params && params.size && params.size.height) ? params.size.height : '450px';
+                    container.style.border = '1px solid #e5e7eb';
+                    container.style.borderRadius = '12px';
+                    container.style.overflow = 'hidden';
+
+                    var map = document.createElement('iframe');
+                    map.style.border = '0';
+                    map.style.width = '100%';
+                    map.style.height = '100%';
+                    // Москва (дефолт) — просто чтобы было что показать
+                    map.src = 'https://www.openstreetmap.org/export/embed.html?bbox=37.50%2C55.70%2C37.75%2C55.85&layer=mapnik';
+                    container.appendChild(map);
+
+                    if (params && params.show_select_button) {
+                      var btn = document.createElement('button');
+                      btn.type = 'button';
+                      btn.textContent = 'Выбрать ПВЗ';
+                      btn.style.position = 'absolute';
+                      btn.style.right = '12px';
+                      btn.style.bottom = '12px';
+                      btn.style.padding = '10px 14px';
+                      btn.style.borderRadius = '10px';
+                      btn.style.border = '0';
+                      btn.style.background = '#111827';
+                      btn.style.color = '#fff';
+                      btn.style.cursor = 'pointer';
+
+                      btn.onclick = function(){
+                        var point = {
+                          id: 'demo-pickup-point',
+                          address: 'Демо ПВЗ, Москва',
+                          name: 'Демо пункт выдачи',
+                          latitude: 55.7522,
+                          longitude: 37.6156,
+                          price: 0,
+                          deliveryTerm: 3,
+                          type: 'pickup_point',
+                          schedule: 'Круглосуточно',
+                          phone: ''
+                        };
+                        if (typeof params.onSelectPoint === 'function') {
+                          try { params.onSelectPoint(point); } catch(e) {}
+                        }
+                      };
+                      container.appendChild(btn);
+                    }
+                  }
+
+                  w.YaDelivery = w.YaDelivery || {};
+                  w.YaDelivery.createWidget = function(cfg){
+                    try {
+                      var id = cfg && cfg.containerId;
+                      var params = cfg && cfg.params;
+                      var container = ensureEl(id);
+                      if (!container) { return; }
+                      renderFallback(container, params || {});
+                    } catch(e) {
+                      // no-op
+                    }
+                  };
+
+                  try {
+                    var ev;
+                    if (typeof Event === 'function') {
+                      ev = new Event('YaNddWidgetLoad');
+                    } else {
+                      ev = document.createEvent('Event');
+                      ev.initEvent('YaNddWidgetLoad', true, true);
+                    }
+                    document.dispatchEvent(ev);
+                  } catch(e) {}
+                })(window);
+                """;
+
+        return Mono.just(ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_TYPE, "application/javascript; charset=utf-8")
+                .cacheControl(CacheControl.maxAge(1, java.util.concurrent.TimeUnit.DAYS).cachePublic())
+                .body(script));
+    }
 }
